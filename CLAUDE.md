@@ -1,8 +1,10 @@
-# Fitness App
+# Fitness Finder
 
-A mobile app that helps people who just moved to a city find trainers, gyms, studios and run clubs. Users use it free. Businesses pay to be listed.
+A mobile app that helps people who just moved to a city find a trainer, gym, studio or run club that fits them. Users use it free. Businesses pay to reach new residents.
 
-Stack: Expo (React Native, TypeScript), Expo Router, Supabase (Postgres, Auth, Row Level Security).
+**What to build is defined in [docs/prd.md](docs/prd.md). Read it before you plan or build anything.** If an issue asks for something the PRD lists under "Not building yet", or contradicts the PRD, stop and ask a question instead of building it.
+
+Stack: Expo (React Native, TypeScript), Expo Router, Supabase (Postgres, Auth, Row Level Security). Mobile first.
 
 @AGENTS.md
 
@@ -39,9 +41,16 @@ npx expo-doctor     # check dependencies and config
 
 ## Product rules
 
-- Free for users: no paywall, no ads, no account needed just to browse listings.
-- Businesses (trainers, gyms, studios, run clubs) are listed and can pay for a better listing. Paid placement must always be marked as such.
-- Do not collect more personal data than a feature needs. Location is approximate (city or neighborhood) unless the user asks for "near me" in that moment.
+These come from the PRD. If the PRD and this list ever differ, the PRD wins.
+
+- **One city for v1: Birmingham / Hoover.** Do not build multi-city support.
+- **Free for users:** no paywall, no ads, no account needed just to browse listings.
+- **Listings are approved by a person before they are public.** Every new or claimed listing starts as pending, and nothing pending is ever shown to users or returned by a public query.
+- **Listings are entered by hand by the owner, plus a business sign-up form.** Do not build imports or scrapers.
+- **Ranking is based on fit, never on payment.** Paid placement, when it exists, is always labeled "Sponsored" and never hides a better-matching free listing. Payments are not part of v1.
+- **Not building yet:** reviews and ratings, in-app chat, booking and payments, a map view, multiple cities, social features, a visitor-only flow.
+- Do not collect more personal data than a feature needs. Location is approximate (part of town) unless the user asks for "near me" in that moment.
+- Never show a "certified" mark without proof; never remove honest negative information for payment.
 
 ## Working with G.O.A.T. AI
 

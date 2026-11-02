@@ -1,6 +1,6 @@
-# Fitness App
+# Fitness Finder
 
-A mobile app that helps people who just moved to a city find trainers, gyms, studios and run clubs. Free for users; businesses pay to be listed.
+A mobile app that helps people who just moved to a city find a trainer, gym, studio or run club that fits them. Free for users; businesses pay to reach new residents. What to build is in [docs/prd.md](docs/prd.md).
 
 Built with Expo (React Native, TypeScript), Expo Router and Supabase.
 
