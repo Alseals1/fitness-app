@@ -3,11 +3,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 
 import { readSupabaseConfig } from './config';
+import type { Database } from './database.types';
 
 const { url, anonKey } = readSupabaseConfig();
 
 /** The one Supabase client for the app. The anon key is public by design: Row Level Security protects the data. */
-export const supabase = createClient(url, anonKey, {
+export const supabase = createClient<Database>(url, anonKey, {
   auth: {
     storage: AsyncStorage,
     autoRefreshToken: true,
