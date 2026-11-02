@@ -9,7 +9,58 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(46);
+select plan(52);
+
+-- ---------------------------------------------------------------------------
+-- Column privileges: exactly the planned columns, nothing more.
+-- Keep the select list in step with PUBLIC_PLACE_COLUMNS in src/lib/places.ts.
+-- ---------------------------------------------------------------------------
+select set_eq(
+  $$select column_name::text from information_schema.column_privileges
+    where table_schema = 'public' and table_name = 'places' and grantee = 'anon' and privilege_type = 'SELECT'$$,
+  array['id', 'name', 'category', 'description', 'area', 'price_range', 'schedule', 'website_url',
+        'contact_phone', 'contact_email', 'instagram_handle', 'tags', 'status', 'is_verified',
+        'last_confirmed_at', 'created_at', 'updated_at'],
+  'anon may select every column except submitted_by and claimed_by'
+);
+
+select set_eq(
+  $$select column_name::text from information_schema.column_privileges
+    where table_schema = 'public' and table_name = 'places' and grantee = 'authenticated' and privilege_type = 'SELECT'$$,
+  array['id', 'name', 'category', 'description', 'area', 'price_range', 'schedule', 'website_url',
+        'contact_phone', 'contact_email', 'instagram_handle', 'tags', 'status', 'is_verified',
+        'last_confirmed_at', 'created_at', 'updated_at'],
+  'authenticated may select every column except submitted_by and claimed_by'
+);
+
+select set_eq(
+  $$select column_name::text from information_schema.column_privileges
+    where table_schema = 'public' and table_name = 'places' and grantee = 'authenticated' and privilege_type = 'INSERT'$$,
+  array['name', 'category', 'description', 'area', 'price_range', 'schedule', 'website_url',
+        'contact_phone', 'contact_email', 'instagram_handle', 'tags'],
+  'authenticated may insert only the editable columns'
+);
+
+select set_eq(
+  $$select column_name::text from information_schema.column_privileges
+    where table_schema = 'public' and table_name = 'places' and grantee = 'authenticated' and privilege_type = 'UPDATE'$$,
+  array['name', 'category', 'description', 'area', 'price_range', 'schedule', 'website_url',
+        'contact_phone', 'contact_email', 'instagram_handle', 'tags'],
+  'authenticated may update only the editable columns'
+);
+
+select is_empty(
+  $$select 1 from information_schema.column_privileges
+    where table_schema = 'public' and table_name = 'places' and grantee = 'anon' and privilege_type in ('INSERT', 'UPDATE')$$,
+  'anon may not insert or update any column'
+);
+
+select is_empty(
+  $$select 1 from information_schema.table_privileges
+    where table_schema = 'public' and table_name in ('places', 'admins')
+      and grantee in ('anon', 'authenticated') and privilege_type in ('DELETE', 'TRUNCATE')$$,
+  'nobody may delete or truncate places or admins through the API'
+);
 
 -- ---------------------------------------------------------------------------
 -- Setup, as postgres
