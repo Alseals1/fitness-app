@@ -4,6 +4,7 @@ import {
   adminErrorMessage,
   applyQueueAction,
   approvePlace,
+  createPlace,
   fetchPendingPlaces,
   hidePlace,
   isQueueAtLimit,
@@ -12,6 +13,7 @@ import {
   validateRejectionReason,
   type AdminClient,
 } from './admin';
+import type { CreatePlaceArgs } from './placeForm';
 import { PUBLIC_PLACE_SELECT, type PublicPlace } from './places';
 
 type Call = { method: string; args: unknown[] };
@@ -224,5 +226,34 @@ describe('isQueueAtLimit', () => {
   it('is true from the limit up', () => {
     expect(isQueueAtLimit(new Array(ADMIN_QUEUE_LIMIT - 1).fill(0))).toBe(false);
     expect(isQueueAtLimit(new Array(ADMIN_QUEUE_LIMIT).fill(0))).toBe(true);
+  });
+});
+
+describe('createPlace', () => {
+  const args: CreatePlaceArgs = {
+    p_name: 'Hand Entered (sample)',
+    p_category: 'gym',
+    p_area: 'hoover',
+    p_price_range: 'budget',
+    p_contact_phone: '205-555-0100',
+    p_tags: ['strength'],
+    p_status: 'approved',
+    p_is_verified: false,
+  };
+
+  it('calls admin_create_place with the form arguments and returns the new id', async () => {
+    const { client, calls } = fakeClient({ data: PLACE_ID, error: null });
+    await expect(createPlace(client, args)).resolves.toEqual({ ok: true, data: PLACE_ID });
+    expect(calls).toEqual([{ method: 'rpc', args: ['admin_create_place', args] }]);
+  });
+
+  it.each([
+    ['42501', ADMIN_MESSAGES.noAccess],
+    ['23514', ADMIN_MESSAGES.invalid],
+    ['22023', ADMIN_MESSAGES.invalid],
+    ['23502', ADMIN_MESSAGES.missing],
+  ])('maps a %s failure', async (code, message) => {
+    const { client } = fakeClient({ data: null, error: { code, message: 'raw' } });
+    await expect(createPlace(client, args)).resolves.toEqual({ ok: false, message });
   });
 });

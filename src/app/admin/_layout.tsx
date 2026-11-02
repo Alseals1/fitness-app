@@ -6,6 +6,7 @@ export default function AdminLayout() {
   return (
     <Stack>
       <Stack.Screen name="index" options={{ title: copy.admin }} />
+      <Stack.Screen name="new-place" options={{ title: copy.newPlace.title }} />
     </Stack>
   );
 }

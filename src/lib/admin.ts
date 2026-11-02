@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from './database.types';
+import type { CreatePlaceArgs } from './placeForm';
 import { PUBLIC_PLACE_SELECT, type PublicPlace } from './places';
 
 /**
@@ -120,6 +121,14 @@ export function setPlaceVerified(
   return run(
     () => client.rpc('admin_set_place_verified', { p_place_id: placeId, p_verified: verified }),
     () => null,
+  );
+}
+
+/** Adds a place by hand through admin_create_place and returns the new place's id. */
+export function createPlace(client: AdminClient, args: CreatePlaceArgs): Promise<AdminResult<string>> {
+  return run(
+    () => client.rpc('admin_create_place', args),
+    (data) => data ?? '',
   );
 }
 
