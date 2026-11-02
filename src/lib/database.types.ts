@@ -24,6 +24,38 @@ export type Database = {
         }
         Relationships: []
       }
+      place_rejections: {
+        Row: {
+          created_at: string
+          id: string
+          place_id: string
+          reason: string
+          rejected_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          place_id: string
+          reason: string
+          rejected_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          place_id?: string
+          reason?: string
+          rejected_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "place_rejections_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       places: {
         Row: {
           area: Database["public"]["Enums"]["place_area"]
@@ -95,6 +127,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_create_place: {
+        Args: {
+          p_area: Database["public"]["Enums"]["place_area"]
+          p_category: Database["public"]["Enums"]["place_category"]
+          p_contact_email?: string
+          p_contact_phone?: string
+          p_description?: string
+          p_instagram_handle?: string
+          p_is_verified?: boolean
+          p_name: string
+          p_price_range: Database["public"]["Enums"]["price_range"]
+          p_schedule?: string
+          p_status?: Database["public"]["Enums"]["place_status"]
+          p_tags?: Database["public"]["Enums"]["place_tag"][]
+          p_website_url?: string
+        }
+        Returns: string
+      }
+      admin_reject_place: {
+        Args: { p_place_id: string; p_reason: string }
+        Returns: undefined
+      }
       admin_set_place_status: {
         Args: {
           p_place_id: string
