@@ -1,12 +1,34 @@
+import { Link } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { Button } from '../components/Button';
+import { useAuth } from '../hooks/useAuth';
+import { copy } from '../lib/copy';
+import { colors, fontSize, spacing } from '../lib/theme';
+
 export default function HomeScreen() {
+  const { session, isAdmin, loading, signOut } = useAuth();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Fitness App</Text>
-      <Text style={styles.subtitle}>
-        Find trainers, gyms, studios and run clubs in your new city.
-      </Text>
+      <Text style={styles.title}>{copy.appName}</Text>
+      <Text style={styles.subtitle}>{copy.tagline}</Text>
+
+      {/* Browsing never needs an account: this only offers the sign-in for admins. */}
+      {loading ? null : !session ? (
+        <Link href="/sign-in" style={styles.link}>
+          {copy.signIn}
+        </Link>
+      ) : isAdmin ? (
+        <Link href="/admin" style={styles.link}>
+          {copy.admin}
+        </Link>
+      ) : (
+        <View style={styles.account}>
+          <Text style={styles.subtitle}>{copy.notAdmin}</Text>
+          <Button label={copy.signOut} variant="secondary" onPress={signOut} />
+        </View>
+      )}
     </View>
   );
 }
@@ -16,9 +38,17 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
-    backgroundColor: '#fff',
+    padding: spacing.xl,
+    backgroundColor: colors.background,
   },
-  title: { fontSize: 28, fontWeight: '700', marginBottom: 8 },
-  subtitle: { fontSize: 16, textAlign: 'center', color: '#444' },
+  title: { fontSize: fontSize.heading, fontWeight: '700', marginBottom: spacing.sm, color: colors.text },
+  subtitle: { fontSize: fontSize.body, textAlign: 'center', color: colors.mutedText },
+  link: {
+    marginTop: spacing.xl,
+    fontSize: fontSize.body,
+    color: colors.primary,
+    fontWeight: '600',
+    padding: spacing.sm,
+  },
+  account: { marginTop: spacing.xl, alignItems: 'center', gap: spacing.md },
 });
