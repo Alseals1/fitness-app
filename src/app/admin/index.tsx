@@ -1,28 +1,126 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Stack, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '../../components/Button';
+import { PendingPlaceCard } from '../../components/PendingPlaceCard';
 import { useAuth } from '../../hooks/useAuth';
+import {
+  applyQueueAction,
+  approvePlace,
+  fetchPendingPlaces,
+  hidePlace,
+  isQueueAtLimit,
+  rejectPlace,
+  setPlaceVerified,
+  type AdminResult,
+  type QueueAction,
+} from '../../lib/admin';
 import { copy } from '../../lib/copy';
+import type { PublicPlace } from '../../lib/places';
+import { supabase } from '../../lib/supabase';
 import { colors, fontSize, spacing } from '../../lib/theme';
 
-// Placeholder: the pending queue replaces this screen in the next part of the stack.
-export default function AdminScreen() {
+export default function AdminQueueScreen() {
   const { signOut } = useAuth();
+  const [places, setPlaces] = useState<PublicPlace[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const load = useCallback(async () => {
+    const result = await fetchPendingPlaces(supabase);
+    if (result.ok) {
+      setPlaces(result.data);
+      setLoadError(null);
+      setErrors({});
+    } else {
+      setLoadError(result.message);
+    }
+    setLoaded(true);
+  }, []);
+
+  // Reload whenever the screen comes back into view, for example after adding a place.
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  }, [load]);
+
+  async function act(placeId: string, action: QueueAction, call: () => Promise<AdminResult<null>>) {
+    setBusyId(placeId);
+    const result = await call();
+    setBusyId(null);
+    if (result.ok) {
+      setPlaces((current) => applyQueueAction(current, placeId, action));
+      setErrors(({ [placeId]: _cleared, ...rest }) => rest);
+    } else {
+      setErrors((current) => ({ ...current, [placeId]: result.message }));
+    }
+  }
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{copy.admin}</Text>
-      <Button label={copy.signOut} variant="secondary" onPress={signOut} />
+      <Stack.Screen
+        options={{
+          headerRight: () => <Button label={copy.signOut} variant="secondary" onPress={signOut} />,
+        }}
+      />
+      {!loaded ? (
+        <ActivityIndicator style={styles.center} color={colors.primary} />
+      ) : (
+        <FlatList
+          data={places}
+          keyExtractor={(place) => place.id}
+          contentContainerStyle={styles.list}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          ListHeaderComponent={
+            loadError ? (
+              <View style={styles.notice}>
+                <Text style={styles.error}>
+                  {copy.queue.loadFailed} {loadError}
+                </Text>
+                <Button label={copy.queue.retry} variant="secondary" onPress={onRefresh} />
+              </View>
+            ) : isQueueAtLimit(places) ? (
+              <Text style={styles.muted}>{copy.queue.limitReached}</Text>
+            ) : undefined
+          }
+          ListEmptyComponent={loadError ? undefined : <Text style={styles.muted}>{copy.queue.empty}</Text>}
+          renderItem={({ item }) => (
+            <PendingPlaceCard
+              place={item}
+              busy={busyId === item.id}
+              error={errors[item.id] ?? null}
+              onApprove={() => act(item.id, { kind: 'approve' }, () => approvePlace(supabase, item.id))}
+              onReject={(reason) => act(item.id, { kind: 'reject' }, () => rejectPlace(supabase, item.id, reason))}
+              onHide={() => act(item.id, { kind: 'hide' }, () => hidePlace(supabase, item.id))}
+              onToggleVerified={() =>
+                act(item.id, { kind: 'verify', verified: !item.is_verified }, () =>
+                  setPlaceVerified(supabase, item.id, !item.is_verified),
+                )
+              }
+            />
+          )}
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.lg,
-    backgroundColor: colors.background,
-  },
-  title: { fontSize: fontSize.heading, fontWeight: '700', color: colors.text },
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1 },
+  list: { padding: spacing.lg, gap: spacing.md },
+  notice: { gap: spacing.sm, marginBottom: spacing.md },
+  error: { fontSize: fontSize.body, color: colors.danger },
+  muted: { fontSize: fontSize.body, color: colors.mutedText, textAlign: 'center', marginBottom: spacing.md },
 });
