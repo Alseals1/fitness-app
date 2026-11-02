@@ -24,4 +24,4 @@ npm test
 
 ## How work gets done
 
-Issues here are taken to pull requests by the [software factory](https://github.com/Alseals1/fitness-app-factory). See `CLAUDE.md` for the rules that humans and agents follow.
+Issues here are taken to pull requests by the [G.O.A.T. AI factory](https://github.com/Alseals1/goat-ai). See `CLAUDE.md` for the rules that humans and agents follow.

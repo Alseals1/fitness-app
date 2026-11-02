@@ -43,10 +43,10 @@ npx expo-doctor     # check dependencies and config
 - Businesses (trainers, gyms, studios, run clubs) are listed and can pay for a better listing. Paid placement must always be marked as such.
 - Do not collect more personal data than a feature needs. Location is approximate (city or neighborhood) unless the user asks for "near me" in that moment.
 
-## Working with the software factory
+## Working with G.O.A.T. AI
 
-Issues in this repo are worked by the Software Farm (`Alseals1/fitness-app-factory`): agents plan, build and review, and a person merges.
+Issues in this repo are worked by G.O.A.T. AI (`Alseals1/goat-ai`): agents plan, build and review, and a person merges.
 
-- Branches are `farm/<issue number>-<slug>`. PR bodies contain `Refs #<issue number>`, never `Closes`, `Fixes` or `Resolves`: a person closes the issue.
+- Branches are `goat/<issue number>-<slug>`. PR bodies contain `Refs #<issue number>`, never `Closes`, `Fixes` or `Resolves`: a person closes the issue.
 - Never build, publish or release the app: no `eas build`, `eas submit`, `eas update`, `fastlane` or store uploads. A person does that.
 - Never commit `.env`, keys or build output.
