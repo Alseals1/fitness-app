@@ -46,11 +46,20 @@ npx supabase gen types --local --lang typescript --schema public > src/lib/datab
 
 Reading places: the API may not read `submitted_by` or `claimed_by`, so `select('*')` on `places` fails. Select `PUBLIC_PLACE_SELECT` from `src/lib/places.ts` instead.
 
-To make yourself an admin locally (to approve, reject, hide or verify places), sign up in the app, then run this in Studio's SQL editor (http://127.0.0.1:54323):
+### Become an admin locally
 
-```sql
-insert into public.admins (user_id) select id from auth.users where email = 'you@example.com';
-```
+Admins approve, reject, hide and verify places, and add places by hand, from the Admin screen. The app has sign-in only (no sign-up), so create the account in local Studio. Nothing here is committed, and only use a made-up email such as `admin@example.com`.
+
+1. Open local Studio (http://127.0.0.1:54323), go to **Authentication → Users → Add user → Create new user**, enter an email and a password, and tick **Auto Confirm User**.
+2. In Studio's SQL editor, make that user an admin:
+
+   ```sql
+   insert into public.admins (user_id) select id from auth.users where email = 'admin@example.com';
+   ```
+
+3. In the app, tap **Sign in** on the home screen and sign in with that email and password. An **Admin** link appears.
+
+To revoke admin, delete the row (`delete from public.admins where user_id = ...`). It takes effect at once in the database; the app notices on the next sign-in. A signed-in user who is not an admin sees "This account is not an admin" and cannot open the Admin screen. The database refuses their admin calls either way.
 
 ## Check it
 
