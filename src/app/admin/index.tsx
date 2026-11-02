@@ -1,4 +1,4 @@
-import { Stack, useFocusEffect } from 'expo-router';
+import { Link, Stack, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
@@ -83,16 +83,21 @@ export default function AdminQueueScreen() {
           contentContainerStyle={styles.list}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           ListHeaderComponent={
-            loadError ? (
-              <View style={styles.notice}>
-                <Text style={styles.error}>
-                  {copy.queue.loadFailed} {loadError}
-                </Text>
-                <Button label={copy.queue.retry} variant="secondary" onPress={onRefresh} />
-              </View>
-            ) : isQueueAtLimit(places) ? (
-              <Text style={styles.muted}>{copy.queue.limitReached}</Text>
-            ) : undefined
+            <View style={styles.notice}>
+              <Link href="/admin/new-place" style={styles.addLink}>
+                {copy.newPlace.title}
+              </Link>
+              {loadError ? (
+                <>
+                  <Text style={styles.error}>
+                    {copy.queue.loadFailed} {loadError}
+                  </Text>
+                  <Button label={copy.queue.retry} variant="secondary" onPress={onRefresh} />
+                </>
+              ) : isQueueAtLimit(places) ? (
+                <Text style={styles.muted}>{copy.queue.limitReached}</Text>
+              ) : null}
+            </View>
           }
           ListEmptyComponent={loadError ? undefined : <Text style={styles.muted}>{copy.queue.empty}</Text>}
           renderItem={({ item }) => (
@@ -120,7 +125,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   center: { flex: 1 },
   list: { padding: spacing.lg, gap: spacing.md },
-  notice: { gap: spacing.sm, marginBottom: spacing.md },
+  notice: { gap: spacing.sm },
   error: { fontSize: fontSize.body, color: colors.danger },
+  addLink: { fontSize: fontSize.body, fontWeight: '600', color: colors.primary, paddingVertical: spacing.sm },
   muted: { fontSize: fontSize.body, color: colors.mutedText, textAlign: 'center', marginBottom: spacing.md },
 });
