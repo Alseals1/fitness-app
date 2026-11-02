@@ -6,6 +6,8 @@ Built with Expo (React Native, TypeScript), Expo Router and Supabase.
 
 ## Run it
 
+Use Node 24 (the version in `.nvmrc`; `nvm use` picks it up).
+
 ```sh
 npm install
 cp .env.example .env      # then fill in the local Supabase values
@@ -21,6 +23,8 @@ npm run lint
 npm run typecheck
 npm test
 ```
+
+CI (`.github/workflows/ci.yml`) runs `npm ci` and these three checks on every pull request and every push to `main`, on the Node version in `.nvmrc`. If any check fails, the PR's `CI / checks` status fails. CI needs no secrets or `.env`.
 
 ## How work gets done
 
