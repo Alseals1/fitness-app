@@ -19,6 +19,7 @@ export type ContactKind = 'phone' | 'email' | 'website' | 'instagram';
 export type ContactLink = { kind: ContactKind; text: string; url: string | null; accessibilityLabel: string };
 
 export type PlaceProfile = {
+  id: string;
   name: string;
   category: string;
   area: string;
@@ -99,6 +100,7 @@ export function toPlaceProfile(place: PublicPlace): PlaceProfile {
   ].filter((link): link is ContactLink => link !== undefined);
 
   const profile: PlaceProfile = {
+    id: place.id,
     name: place.name,
     category: CATEGORY_LABELS[place.category],
     area: AREA_LABELS[place.area],

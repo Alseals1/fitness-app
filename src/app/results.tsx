@@ -5,6 +5,7 @@ import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } f
 import { Button } from '../components/Button';
 import { ResultCard } from '../components/ResultCard';
 import { usePreferences } from '../hooks/usePreferences';
+import { useShortlist } from '../hooks/useShortlist';
 import { copy } from '../lib/copy';
 import { fetchApprovedPlaces } from '../lib/places';
 import { resultsView, type PlacesLoad } from '../lib/results';
@@ -14,6 +15,7 @@ import { colors, fontSize, spacing } from '../lib/theme';
 /** Approved places, best fit first. Open to everyone: no account needed. */
 export default function ResultsScreen() {
   const { preferences, loading: preferencesLoading } = usePreferences();
+  const shortlist = useShortlist();
   const [places, setPlaces] = useState<PlacesLoad>({ status: 'loading' });
   const [refreshing, setRefreshing] = useState(false);
 
@@ -71,22 +73,40 @@ export default function ResultsScreen() {
         keyExtractor={(result) => result.place.id}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        // The cards read their saved state from the shortlist, so a toggle must repaint them.
+        extraData={shortlist.ids}
         ListHeaderComponent={
-          view.hasPreferences ? (
-            <Link href="/onboarding" style={styles.link}>
-              {copy.onboarding.changeLink}
-            </Link>
-          ) : (
-            <View style={styles.notice}>
-              <Text style={styles.noticeText}>{copy.results.noPreferences}</Text>
+          <View style={styles.header}>
+            {view.hasPreferences ? (
               <Link href="/onboarding" style={styles.link}>
-                {copy.onboarding.setLink}
+                {copy.onboarding.changeLink}
               </Link>
-            </View>
-          )
+            ) : (
+              <View style={styles.notice}>
+                <Text style={styles.noticeText}>{copy.results.noPreferences}</Text>
+                <Link href="/onboarding" style={styles.link}>
+                  {copy.onboarding.setLink}
+                </Link>
+              </View>
+            )}
+            <Link href="/shortlist" style={styles.link}>
+              {copy.shortlist.resultsLink}
+            </Link>
+            {shortlist.saveError ? (
+              <Text style={styles.error} accessibilityLiveRegion="polite">
+                {shortlist.saveError}
+              </Text>
+            ) : null}
+          </View>
         }
         ListEmptyComponent={<Text style={styles.muted}>{copy.results.empty}</Text>}
-        renderItem={({ item }) => <ResultCard result={item} />}
+        renderItem={({ item }) => (
+          <ResultCard
+            result={item}
+            saved={shortlist.isSaved(item.place.id)}
+            onToggleSave={shortlist.toggle}
+          />
+        )}
       />
     </View>
   );
@@ -97,6 +117,7 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   centered: { alignItems: 'center', justifyContent: 'center', padding: spacing.xl, gap: spacing.md },
   list: { padding: spacing.lg, gap: spacing.md },
+  header: { gap: spacing.xs },
   notice: { gap: spacing.xs },
   noticeText: { fontSize: fontSize.body, color: colors.text },
   link: { fontSize: fontSize.body, fontWeight: '600', color: colors.primary, paddingVertical: spacing.sm },

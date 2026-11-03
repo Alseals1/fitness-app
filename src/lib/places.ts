@@ -111,3 +111,31 @@ export async function fetchApprovedPlace(client: PlacesClient, id: unknown): Pro
     return { ok: false, message: copy.place.loadFailed };
   }
 }
+
+/**
+ * The approved places among `ids`, for anyone, with or without an account. Used by the
+ * shortlist, whose ids come from the device. Ids that are not uuids are dropped before the
+ * request, and an empty list makes no request. A saved place that is no longer approved
+ * (hidden, rejected, back to pending) or was deleted is simply not returned.
+ *
+ * The `status = 'approved'` filter is required, not only RLS: a signed-in admin
+ * (places_select_admin) or business (places_select_own) may also read pending rows, and those
+ * must never show on the shortlist. Never throws, and never shows the database's own message.
+ */
+export async function fetchApprovedPlacesByIds(client: PlacesClient, ids: readonly string[]): Promise<PlacesResult> {
+  const validIds = [...new Set(ids.filter(isPlaceId))];
+  if (validIds.length === 0) return { ok: true, data: [] };
+  try {
+    const { data, error } = await client
+      .from('places')
+      .select(PUBLIC_PLACE_SELECT)
+      .in('id', validIds)
+      .eq('status', 'approved')
+      .limit(validIds.length)
+      .overrideTypes<PublicPlace[], { merge: false }>();
+    if (error) return { ok: false, message: copy.shortlist.loadFailed };
+    return { ok: true, data: data ?? [] };
+  } catch {
+    return { ok: false, message: copy.shortlist.loadFailed };
+  }
+}

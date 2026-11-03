@@ -46,6 +46,7 @@ describe('text', () => {
 describe('toPlaceProfile', () => {
   it('builds the profile from the label maps', () => {
     expect(toPlaceProfile(makePlace())).toEqual({
+      id: '5eed0000-0000-4000-8000-000000000000',
       name: 'Sample Yoga (sample)',
       category: 'Studio',
       area: 'Southside',
