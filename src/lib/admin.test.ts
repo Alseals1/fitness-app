@@ -2,17 +2,31 @@ import {
   ADMIN_MESSAGES,
   ADMIN_QUEUE_LIMIT,
   adminErrorMessage,
+  applyClaimAction,
+  applyClaimCertified,
   applyQueueAction,
+  approveClaim,
   approvePlace,
+  CERTIFICATION_NAME_MAX,
   createPlace,
   fetchPendingPlaces,
+  fetchPendingSubmissions,
   hidePlace,
   isQueueAtLimit,
+  queueSections,
+  rejectClaim,
   rejectPlace,
+  setPlaceCertified,
   setPlaceVerified,
+  showsCertifyControl,
+  splitSubmissions,
+  toSubmissionDetails,
+  validateCertificationName,
   validateRejectionReason,
   type AdminClient,
+  type Submission,
 } from './admin';
+import { copy } from './copy';
 import type { CreatePlaceArgs } from './placeForm';
 import { PUBLIC_PLACE_SELECT, type PublicPlace } from './places';
 
@@ -209,6 +223,17 @@ describe('applyQueueAction', () => {
     expect(applyQueueAction(queue, 'b', { kind }).map((p) => p.id)).toEqual(['a', 'c']);
   });
 
+  it('certify sets both certified columns on that place only, and null clears them', () => {
+    const certified = applyQueueAction(queue, 'b', { kind: 'certify', name: 'NASM-CPT' });
+    expect(certified.map((p) => [p.id, p.is_certified, p.certification_name])).toEqual([
+      ['a', false, null],
+      ['b', true, 'NASM-CPT'],
+      ['c', false, null],
+    ]);
+    const cleared = applyQueueAction(certified, 'b', { kind: 'certify', name: null });
+    expect(cleared[1]).toMatchObject({ is_certified: false, certification_name: null });
+  });
+
   it('verify flips only that place and keeps it in the queue', () => {
     const next = applyQueueAction(queue, 'b', { kind: 'verify', verified: true });
     expect(next.map((p) => [p.id, p.is_verified])).toEqual([
@@ -257,5 +282,216 @@ describe('createPlace', () => {
   ])('maps a %s failure', async (code, message) => {
     const { client } = fakeClient({ data: null, error: { code, message: 'raw' } });
     await expect(createPlace(client, args)).resolves.toEqual({ ok: false, message });
+  });
+});
+
+const CLAIM_ID = '5eed0000-0000-4000-8000-0000000000c1';
+
+function makeSubmission(overrides: Partial<Submission> = {}): Submission {
+  return {
+    id: CLAIM_ID,
+    kind: 'claim',
+    place_id: PLACE_ID,
+    place_name: 'Sample Trainer (sample)',
+    place_category: 'trainer',
+    place_status: 'approved',
+    place_is_claimed: false,
+    place_certification_name: null,
+    account_email: 'owner@example.com',
+    verification_email: 'owner-business@example.com',
+    verification_social: null,
+    certification_name: 'NASM-CPT',
+    note: null,
+    created_at: '2026-11-01T00:00:00Z',
+    ...overrides,
+  };
+}
+
+describe('fetchPendingSubmissions', () => {
+  it('calls admin_list_submissions and returns its rows', async () => {
+    const rows = [makeSubmission()];
+    const { client, calls } = fakeClient({ data: rows, error: null });
+    await expect(fetchPendingSubmissions(client)).resolves.toEqual({ ok: true, data: rows });
+    expect(calls).toEqual([{ method: 'rpc', args: ['admin_list_submissions'] }]);
+  });
+
+  it('returns an empty list when there is no data, and maps errors', async () => {
+    await expect(fetchPendingSubmissions(fakeClient({ data: null, error: null }).client)).resolves.toEqual({
+      ok: true,
+      data: [],
+    });
+    await expect(
+      fetchPendingSubmissions(fakeClient({ data: null, error: { code: '42501', message: 'admin only' } }).client),
+    ).resolves.toEqual({ ok: false, message: ADMIN_MESSAGES.noAccess });
+  });
+});
+
+describe('approveClaim and rejectClaim', () => {
+  it('approves through admin_approve_claim', async () => {
+    const { client, calls } = fakeClient({ data: null, error: null });
+    await expect(approveClaim(client, CLAIM_ID)).resolves.toEqual({ ok: true, data: null });
+    expect(calls).toEqual([{ method: 'rpc', args: ['admin_approve_claim', { p_submission_id: CLAIM_ID }] }]);
+  });
+
+  it('rejects through admin_reject_claim with the trimmed reason', async () => {
+    const { client, calls } = fakeClient({ data: null, error: null });
+    await expect(rejectClaim(client, CLAIM_ID, '  No proof ')).resolves.toEqual({ ok: true, data: null });
+    expect(calls).toEqual([
+      { method: 'rpc', args: ['admin_reject_claim', { p_submission_id: CLAIM_ID, p_reason: 'No proof' }] },
+    ]);
+  });
+
+  it('does not call the database without a reason', async () => {
+    const { client, calls } = fakeClient({ data: null, error: null });
+    await expect(rejectClaim(client, CLAIM_ID, ' ')).resolves.toEqual({
+      ok: false,
+      message: ADMIN_MESSAGES.reasonRequired,
+    });
+    expect(calls).toEqual([]);
+  });
+
+  it('says a decided claim is gone', async () => {
+    const { client } = fakeClient({ data: null, error: { code: 'P0002', message: 'pending claim x not found' } });
+    await expect(approveClaim(client, CLAIM_ID)).resolves.toEqual({ ok: false, message: ADMIN_MESSAGES.claimGone });
+    await expect(rejectClaim(client, CLAIM_ID, 'No proof')).resolves.toEqual({
+      ok: false,
+      message: ADMIN_MESSAGES.claimGone,
+    });
+  });
+});
+
+describe('setPlaceCertified', () => {
+  it('sends the trimmed name and returns it', async () => {
+    const { client, calls } = fakeClient({ data: null, error: null });
+    await expect(setPlaceCertified(client, PLACE_ID, '  NASM-CPT ')).resolves.toEqual({ ok: true, data: 'NASM-CPT' });
+    expect(calls).toEqual([
+      { method: 'rpc', args: ['admin_set_place_certified', { p_place_id: PLACE_ID, p_certification_name: 'NASM-CPT' }] },
+    ]);
+  });
+
+  it('sends null to remove the mark', async () => {
+    const { client, calls } = fakeClient({ data: null, error: null });
+    await expect(setPlaceCertified(client, PLACE_ID, null)).resolves.toEqual({ ok: true, data: null });
+    expect(calls).toEqual([
+      { method: 'rpc', args: ['admin_set_place_certified', { p_place_id: PLACE_ID, p_certification_name: null }] },
+    ]);
+  });
+
+  it('does not call the database for a blank name', async () => {
+    const { client, calls } = fakeClient({ data: null, error: null });
+    await expect(setPlaceCertified(client, PLACE_ID, '   ')).resolves.toEqual({
+      ok: false,
+      message: ADMIN_MESSAGES.certificationRequired,
+    });
+    expect(calls).toEqual([]);
+  });
+
+  it('maps a place that is not a trainer', async () => {
+    const { client } = fakeClient({ data: null, error: { code: '22023', message: 'only a trainer' } });
+    await expect(setPlaceCertified(client, PLACE_ID, 'RYT')).resolves.toEqual({
+      ok: false,
+      message: ADMIN_MESSAGES.invalid,
+    });
+  });
+});
+
+describe('validateCertificationName', () => {
+  it(`accepts 1 to ${CERTIFICATION_NAME_MAX} characters after trimming`, () => {
+    expect(validateCertificationName('  ACE ')).toEqual({ ok: true, name: 'ACE' });
+    expect(validateCertificationName('x'.repeat(CERTIFICATION_NAME_MAX)).ok).toBe(true);
+    expect(validateCertificationName('x'.repeat(CERTIFICATION_NAME_MAX + 1))).toEqual({
+      ok: false,
+      message: ADMIN_MESSAGES.certificationTooLong,
+    });
+    expect(validateCertificationName('')).toEqual({ ok: false, message: ADMIN_MESSAGES.certificationRequired });
+  });
+});
+
+describe('showsCertifyControl', () => {
+  it('shows for a trainer, certified or not', () => {
+    expect(showsCertifyControl('trainer', null)).toBe(true);
+    expect(showsCertifyControl('trainer', 'ACE')).toBe(true);
+  });
+
+  it('shows for a former trainer that still carries the mark, so the admin can remove it', () => {
+    expect(showsCertifyControl('gym', 'ACE')).toBe(true);
+  });
+
+  it('hides for any other place without the mark', () => {
+    expect(showsCertifyControl('gym', null)).toBe(false);
+    expect(showsCertifyControl('studio', null)).toBe(false);
+  });
+});
+
+describe('splitSubmissions', () => {
+  it('keys new listings by place and keeps the claims in order', () => {
+    const newPlace = makeSubmission({ id: 'n1', kind: 'new_place', place_id: 'p1', place_status: 'pending' });
+    const claimA = makeSubmission({ id: 'c1', place_id: 'p2' });
+    const claimB = makeSubmission({ id: 'c2', place_id: 'p3' });
+    expect(splitSubmissions([claimA, newPlace, claimB])).toEqual({
+      byPlaceId: { p1: newPlace },
+      claims: [claimA, claimB],
+    });
+  });
+});
+
+describe('toSubmissionDetails', () => {
+  it('lists the non-empty details with labels', () => {
+    expect(toSubmissionDetails(makeSubmission({ note: '  ', verification_social: ' instagram.com/sample ' }))).toEqual([
+      { label: copy.queue.details.account, value: 'owner@example.com' },
+      { label: copy.queue.details.verificationEmail, value: 'owner-business@example.com' },
+      { label: copy.queue.details.verificationSocial, value: 'instagram.com/sample' },
+      { label: copy.queue.details.certification, value: 'NASM-CPT' },
+    ]);
+  });
+
+  it('keeps untrusted values as plain strings, never links', () => {
+    const details = toSubmissionDetails(
+      makeSubmission({
+        verification_social: 'javascript:alert(1)',
+        note: '<script>alert(1)</script>',
+      }),
+    );
+    expect(details).toContainEqual({ label: copy.queue.details.verificationSocial, value: 'javascript:alert(1)' });
+    expect(details).toContainEqual({ label: copy.queue.details.note, value: '<script>alert(1)</script>' });
+    for (const detail of details) {
+      expect(Object.keys(detail).sort()).toEqual(['label', 'value']);
+    }
+  });
+});
+
+describe('claim helpers', () => {
+  const claims = [
+    makeSubmission({ id: 'c1', place_id: 'p1' }),
+    makeSubmission({ id: 'c2', place_id: 'p2' }),
+    makeSubmission({ id: 'c3', place_id: 'p1' }),
+  ];
+
+  it('applyClaimAction removes the decided claim', () => {
+    expect(applyClaimAction(claims, 'c2').map((c) => c.id)).toEqual(['c1', 'c3']);
+  });
+
+  it('applyClaimCertified updates every claim on that place', () => {
+    const next = applyClaimCertified(claims, 'p1', 'ACE');
+    expect(next.map((c) => c.place_certification_name)).toEqual(['ACE', null, 'ACE']);
+    expect(applyClaimCertified(next, 'p1', null).map((c) => c.place_certification_name)).toEqual([null, null, null]);
+  });
+});
+
+describe('queueSections', () => {
+  const place = { id: 'p9' } as PublicPlace;
+  const claim = makeSubmission();
+
+  it('puts claims first, then pending listings', () => {
+    expect(queueSections([place], [claim])).toEqual([
+      { key: 'claims', title: copy.queue.claims, data: [{ kind: 'claim', claim }] },
+      { key: 'places', title: copy.queue.pendingListings, data: [{ kind: 'place', place }] },
+    ]);
+  });
+
+  it('leaves out empty sections', () => {
+    expect(queueSections([place], []).map((s) => s.key)).toEqual(['places']);
+    expect(queueSections([], [claim]).map((s) => s.key)).toEqual(['claims']);
+    expect(queueSections([], [])).toEqual([]);
   });
 });

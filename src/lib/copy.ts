@@ -10,6 +10,7 @@ export const copy = {
   admin: 'Admin',
   cancel: 'Cancel',
   verified: 'Verified',
+  certified: 'Certified',
   signUp: {
     title: 'Create an account',
     intro: "For businesses that want to list or claim a place. You don't need an account to browse.",
@@ -60,7 +61,23 @@ export const copy = {
     homeLink: 'Back to home',
   },
   queue: {
-    empty: 'No places waiting for review.',
+    empty: 'Nothing waiting for review.',
+    claims: 'Claims',
+    pendingListings: 'Pending listings',
+    fromBusiness: 'From the business (private)',
+    claimOf: 'Claim for',
+    alreadyClaimed: 'Already claimed by another account. Approving replaces the owner.',
+    certify: 'Mark certified (proof seen)',
+    uncertify: 'Remove certified',
+    certificationPlaceholder: 'Certification name, for example NASM-CPT',
+    certifiedAs: (name: string) => `Certified: ${name}`,
+    details: {
+      account: 'Account',
+      verificationEmail: 'Business email',
+      verificationSocial: 'Social account',
+      certification: 'Certification',
+      note: 'Note',
+    },
     limitReached: 'Showing the newest 100.',
     approve: 'Approve',
     reject: 'Reject',
@@ -161,6 +178,8 @@ export const copy = {
       website: (value: string) => `Open website ${value}`,
       instagram: (value: string) => `Open Instagram ${value}`,
     },
+    /** Shown only after an admin has seen proof. */
+    certified: (name: string) => `Certified: ${name}`,
     /** PRD: a short safety note on trainer profiles. */
     trainerSafety: 'Meeting a new trainer? Meet somewhere public, like a gym, studio or busy park.',
   },

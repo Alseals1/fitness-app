@@ -28,6 +28,8 @@ export type PlaceProfile = {
   schedule?: string;
   tags: string[];
   contacts: ContactLink[];
+  /** "Certified: <name>", only for a trainer an admin has marked certified. */
+  certified?: string;
   safetyNote?: string;
 };
 
@@ -113,6 +115,11 @@ export function toPlaceProfile(place: PublicPlace): PlaceProfile {
   if (description) profile.description = description;
   const schedule = text(place.schedule);
   if (schedule) profile.schedule = schedule;
+  // Never show a certified mark without proof: only the admin-set flag and name count.
+  const certificationName = text(place.certification_name);
+  if (place.category === 'trainer' && place.is_certified && certificationName) {
+    profile.certified = copy.place.certified(certificationName);
+  }
   if (place.category === 'trainer') profile.safetyNote = copy.place.trainerSafety;
   return profile;
 }
