@@ -12,8 +12,8 @@ import type { Database, Tables } from './database.types';
  * `.update(...).select()`, must pass `PUBLIC_PLACE_SELECT` instead.
  *
  * Keep this list in the same order as the `grant select (...)` in
- * `supabase/migrations/*_places_access.sql`. The pgTAP test `places_access.test.sql` checks
- * the granted list.
+ * `supabase/migrations/*_places_access.sql`, followed by the columns granted in
+ * `*_business_submissions.sql`. The pgTAP test `places_access.test.sql` checks the granted list.
  */
 export const PUBLIC_PLACE_COLUMNS = [
   'id',
@@ -33,6 +33,8 @@ export const PUBLIC_PLACE_COLUMNS = [
   'last_confirmed_at',
   'created_at',
   'updated_at',
+  'is_certified',
+  'certification_name',
 ] as const satisfies readonly (keyof Tables<'places'>)[];
 
 /** The select string for reading places, for example `supabase.from('places').select(PUBLIC_PLACE_SELECT)`. */

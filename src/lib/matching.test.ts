@@ -20,6 +20,8 @@ function makePlace(overrides: Partial<PublicPlace> = {}): PublicPlace {
     status: 'approved',
     is_verified: false,
     last_confirmed_at: null,
+    is_certified: false,
+    certification_name: null,
     created_at: '2026-11-01T00:00:00Z',
     updated_at: '2026-11-01T00:00:00Z',
     ...overrides,
