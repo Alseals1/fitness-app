@@ -71,6 +71,8 @@ export const copy = {
     empty: 'Nothing here yet. Check back soon.',
     loadFailed: "Couldn't load places. Check your connection and try again.",
     retry: 'Try again',
+    /** Screen-reader hint on a result card. */
+    openHint: 'Opens the place profile',
     /** Read out before the reason tags, for screen readers. */
     reasonsLabel: 'Why this fits you',
     /** The "why this fits you" tags on a result. */
@@ -88,5 +90,30 @@ export const copy = {
       goals: { strength: 'strength', cardio: 'cardio', yoga: 'yoga', running: 'running' },
       times: { mornings: 'morning', evenings: 'evening', weekends: 'weekend' },
     },
+  },
+  place: {
+    title: 'Place',
+    /** One not-found text for a missing, non-approved or malformed id. */
+    notFoundTitle: 'Place not found',
+    notFoundBody: "This place isn't listed right now. It may have moved or closed.",
+    backToResults: 'Back to places',
+    loadFailed: "Couldn't load this place. Check your connection and try again.",
+    retry: 'Try again',
+    openFailed: "Couldn't open that on this device. You can copy the details instead.",
+    about: 'About',
+    price: 'Price range',
+    schedule: 'Schedule',
+    area: 'Part of town',
+    tags: 'Good to know',
+    contact: 'Get in touch',
+    /** Screen-reader labels for the contact rows. */
+    contactLabels: {
+      phone: (value: string) => `Call ${value}`,
+      email: (value: string) => `Email ${value}`,
+      website: (value: string) => `Open website ${value}`,
+      instagram: (value: string) => `Open Instagram ${value}`,
+    },
+    /** PRD: a short safety note on trainer profiles. */
+    trainerSafety: 'Meeting a new trainer? Meet somewhere public, like a gym, studio or busy park.',
   },
 } as const;
