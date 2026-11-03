@@ -18,6 +18,7 @@ import {
   rejectPlace,
   setPlaceCertified,
   setPlaceVerified,
+  showsCertifyControl,
   splitSubmissions,
   toSubmissionDetails,
   validateCertificationName,
@@ -403,6 +404,22 @@ describe('validateCertificationName', () => {
       message: ADMIN_MESSAGES.certificationTooLong,
     });
     expect(validateCertificationName('')).toEqual({ ok: false, message: ADMIN_MESSAGES.certificationRequired });
+  });
+});
+
+describe('showsCertifyControl', () => {
+  it('shows for a trainer, certified or not', () => {
+    expect(showsCertifyControl('trainer', null)).toBe(true);
+    expect(showsCertifyControl('trainer', 'ACE')).toBe(true);
+  });
+
+  it('shows for a former trainer that still carries the mark, so the admin can remove it', () => {
+    expect(showsCertifyControl('gym', 'ACE')).toBe(true);
+  });
+
+  it('hides for any other place without the mark', () => {
+    expect(showsCertifyControl('gym', null)).toBe(false);
+    expect(showsCertifyControl('studio', null)).toBe(false);
   });
 });
 

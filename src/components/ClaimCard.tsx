@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import type { Submission } from '../lib/admin';
+import { showsCertifyControl, type Submission } from '../lib/admin';
 import { copy } from '../lib/copy';
 import { CATEGORY_LABELS } from '../lib/placeOptions';
 import { colors, fontSize, radius, spacing } from '../lib/theme';
@@ -40,7 +40,7 @@ export function ClaimCard({ claim, onApprove, onReject, onCertify, onUncertify, 
         </Text>
       ) : null}
 
-      {claim.place_category === 'trainer' ? (
+      {showsCertifyControl(claim.place_category, claim.place_certification_name) ? (
         <CertifyControl
           certificationName={claim.place_certification_name}
           suggestedName={claim.certification_name}

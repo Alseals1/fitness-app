@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import type { Submission } from '../lib/admin';
+import { showsCertifyControl, type Submission } from '../lib/admin';
 import { copy } from '../lib/copy';
 import { AREA_LABELS, CATEGORY_LABELS, PRICE_LABELS, TAG_LABELS } from '../lib/placeOptions';
 import type { PublicPlace } from '../lib/places';
@@ -42,6 +42,7 @@ export function PendingPlaceCard({
 }: Props) {
   const [rejecting, setRejecting] = useState(false);
   const [confirmingHide, setConfirmingHide] = useState(false);
+  const certificationName = place.is_certified ? place.certification_name : null;
 
   const contacts = [place.website_url, place.contact_phone, place.contact_email, place.instagram_handle && `@${place.instagram_handle}`].filter(
     (value): value is string => Boolean(value),
@@ -75,9 +76,9 @@ export function PendingPlaceCard({
         </Text>
       ) : null}
 
-      {place.category === 'trainer' ? (
+      {showsCertifyControl(place.category, certificationName) ? (
         <CertifyControl
-          certificationName={place.is_certified ? place.certification_name : null}
+          certificationName={certificationName}
           suggestedName={submission?.certification_name ?? null}
           onCertify={onCertify}
           onUncertify={onUncertify}

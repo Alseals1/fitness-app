@@ -76,6 +76,15 @@ export function validateCertificationName(name: string): CertificationResult {
   return { ok: true, name: trimmed };
 }
 
+/**
+ * Whether a card shows the certify control: always for a trainer, and for any other place
+ * that still carries the mark (a business can change its pending trainer's category), so
+ * the admin can remove it.
+ */
+export function showsCertifyControl(category: string, certificationName: string | null): boolean {
+  return category === 'trainer' || certificationName !== null;
+}
+
 type DbResponse<T> = { data: T | null; error: DbErrorLike };
 
 async function run<T, R>(
@@ -156,7 +165,8 @@ export function createPlace(client: AdminClient, args: CreatePlaceArgs): Promise
 
 /**
  * Marks a trainer certified with `name` after the admin has seen proof, or removes the mark
- * with null. The database refuses any place that is not a trainer.
+ * with null. The database refuses a name for any place that is not a trainer; null always
+ * removes the mark.
  */
 export async function setPlaceCertified(
   client: AdminClient,

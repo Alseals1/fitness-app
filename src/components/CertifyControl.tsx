@@ -18,7 +18,8 @@ type Props = {
 
 /**
  * Marks a trainer certified after the admin has seen proof off-app, or removes the mark.
- * Render it only for trainers: the database refuses any other category.
+ * Render it where showsCertifyControl says: the database certifies only trainers, but
+ * removes the mark from any place.
  */
 export function CertifyControl({ certificationName, suggestedName, onCertify, onUncertify, busy }: Props) {
   const [name, setName] = useState(suggestedName ?? '');
