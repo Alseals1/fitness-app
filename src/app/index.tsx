@@ -46,7 +46,12 @@ export default function HomeScreen() {
         </Link>
       )}
 
-      {/* Browsing never needs an account: this only offers the sign-in for admins. */}
+      {/* Always shown: businesses add or claim a listing here. */}
+      <Link href="/business" style={styles.link}>
+        {copy.business.homeLink}
+      </Link>
+
+      {/* Browsing never needs an account: this only offers the sign-in for admins and businesses. */}
       {loading ? null : !session ? (
         <Link href="/sign-in" style={styles.link}>
           {copy.signIn}
@@ -57,7 +62,6 @@ export default function HomeScreen() {
         </Link>
       ) : (
         <View style={styles.account}>
-          <Text style={styles.subtitle}>{copy.notAdmin}</Text>
           <Button label={copy.signOut} variant="secondary" onPress={signOut} />
         </View>
       )}

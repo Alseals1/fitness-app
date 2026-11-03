@@ -11,6 +11,8 @@ type AuthContextValue = {
   /** True until the stored session (and, when signed in, the admin check) has loaded. */
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  /** Creates a business account. `needsConfirmation` is true when the server wants the email confirmed first. */
+  signUp: (email: string, password: string) => Promise<{ error: AuthError | null; needsConfirmation: boolean }>;
   signOut: () => Promise<void>;
 };
 
@@ -79,6 +81,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   }, []);
 
+  const signUp = useCallback(async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    return { error, needsConfirmation: !error && !data.session };
+  }, []);
+
   const signOut = useCallback(async () => {
     // Local scope: sign out this device only.
     await supabase.auth.signOut({ scope: 'local' });
@@ -89,8 +96,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loading = !sessionLoaded || (userId !== null && !checkedThisUser);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ session, isAdmin, loading, signIn, signOut }),
-    [session, isAdmin, loading, signIn, signOut],
+    () => ({ session, isAdmin, loading, signIn, signUp, signOut }),
+    [session, isAdmin, loading, signIn, signUp, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
