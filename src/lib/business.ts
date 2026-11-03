@@ -26,6 +26,7 @@ export const BUSINESS_MESSAGES = {
   signIn: 'Sign in again to send this.',
   gone: "That place isn't listed any more.",
   duplicateClaim: 'You already have a claim waiting for this place.',
+  alreadyYours: "You already manage this place, so there's nothing to claim.",
   invalid: "Some details aren't valid. Check the form and try again.",
   generic: 'Something went wrong. Please try again.',
 } as const;
@@ -36,6 +37,7 @@ export type BusinessErrorLike = { code?: string | null; message?: string } | nul
 /**
  * Turns a database error into plain words. It never repeats the database's own message.
  * PostgREST sends SQLSTATE PT429 as HTTP 429 with code 'PT429'; both are checked.
+ * PT409 means the caller already manages the place it tried to claim.
  */
 export function businessErrorMessage(error: BusinessErrorLike, status?: number): string {
   if (error?.code === 'PT429' || status === 429) return BUSINESS_MESSAGES.tooMany;
@@ -46,6 +48,8 @@ export function businessErrorMessage(error: BusinessErrorLike, status?: number):
       return BUSINESS_MESSAGES.gone;
     case '23505':
       return BUSINESS_MESSAGES.duplicateClaim;
+    case 'PT409':
+      return BUSINESS_MESSAGES.alreadyYours;
     case '22023':
     case '23514':
       return BUSINESS_MESSAGES.invalid;

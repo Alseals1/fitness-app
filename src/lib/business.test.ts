@@ -83,6 +83,7 @@ describe('businessErrorMessage', () => {
     [{ code: '42501' }, 401, BUSINESS_MESSAGES.signIn],
     [{ code: 'P0002' }, 404, BUSINESS_MESSAGES.gone],
     [{ code: '23505' }, 409, BUSINESS_MESSAGES.duplicateClaim],
+    [{ code: 'PT409' }, 409, BUSINESS_MESSAGES.alreadyYours],
     [{ code: '22023' }, 400, BUSINESS_MESSAGES.invalid],
     [{ code: '23514' }, 400, BUSINESS_MESSAGES.invalid],
     [{ code: 'XX000' }, 500, BUSINESS_MESSAGES.generic],
