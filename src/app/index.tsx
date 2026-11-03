@@ -1,18 +1,40 @@
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
+import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '../components/Button';
 import { useAuth } from '../hooks/useAuth';
+import { usePreferences } from '../hooks/usePreferences';
 import { copy } from '../lib/copy';
+import { shouldOpenOnboarding } from '../lib/onboarding';
 import { colors, fontSize, spacing } from '../lib/theme';
+
+// Onboarding opens by itself at most once per app launch, so backing out of it never loops.
+let promptedThisLaunch = false;
 
 export default function HomeScreen() {
   const { session, isAdmin, loading, signOut } = useAuth();
+  const { preferences, loading: preferencesLoading } = usePreferences();
+
+  // First run: nothing saved yet. This never blocks browsing; the person can back out.
+  useEffect(() => {
+    const state = { loading: preferencesLoading, stored: preferences, alreadyPrompted: promptedThisLaunch };
+    if (shouldOpenOnboarding(state)) {
+      promptedThisLaunch = true;
+      router.push('/onboarding');
+    }
+  }, [preferencesLoading, preferences]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{copy.appName}</Text>
       <Text style={styles.subtitle}>{copy.tagline}</Text>
+
+      {preferencesLoading ? null : (
+        <Link href="/onboarding" style={styles.link}>
+          {preferences === null ? copy.onboarding.setLink : copy.onboarding.changeLink}
+        </Link>
+      )}
 
       {/* Browsing never needs an account: this only offers the sign-in for admins. */}
       {loading ? null : !session ? (

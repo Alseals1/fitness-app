@@ -45,7 +45,7 @@ export const TAG_LABELS: Record<Enums<'place_tag'>, string> = {
 
 export type Option<T extends string> = { value: T; label: string };
 
-function toOptions<T extends string>(values: readonly T[], labels: Record<T, string>): Option<T>[] {
+export function toOptions<T extends string>(values: readonly T[], labels: Record<T, string>): Option<T>[] {
   return values.map((value) => ({ value, label: labels[value] }));
 }
 
