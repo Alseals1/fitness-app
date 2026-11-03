@@ -60,7 +60,7 @@ select enum_has_labels('public', 'price_range', array['free', 'budget', 'moderat
 select enum_has_labels(
   'public',
   'place_tag',
-  array['beginner_friendly', 'all_levels', 'strength', 'cardio', 'yoga', 'running', 'drop_in', 'free_trial', 'outdoor'],
+  array['beginner_friendly', 'all_levels', 'strength', 'cardio', 'yoga', 'running', 'drop_in', 'free_trial', 'outdoor', 'mornings', 'evenings', 'weekends'],
   'tag values'
 );
 

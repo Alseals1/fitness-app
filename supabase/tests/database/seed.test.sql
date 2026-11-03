@@ -4,7 +4,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(5);
+select plan(6);
 
 select cmp_ok(
   (select count(*)::int from public.places),
@@ -37,6 +37,14 @@ select cmp_ok(
   '>=',
   1,
   'at least one approved place is verified'
+);
+
+select cmp_ok(
+  (select count(*)::int from public.places
+    where status = 'approved' and tags && '{mornings,evenings,weekends}'::public.place_tag[]),
+  '>=',
+  1,
+  'at least one approved place has a time tag'
 );
 
 select * from finish();
