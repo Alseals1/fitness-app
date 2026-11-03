@@ -10,6 +10,7 @@
 --         sponsored or claimed.
 --       - submit_place_claim works only on an approved place, and never changes the place:
 --         it stays approved and public, and claimed_by is unchanged while the claim waits.
+--         The place's current owner gets SQLSTATE PT409 ("you already manage this place").
 --       - Both need at least one verification contact (business email or official social
 --         account), and allow at most 5 submissions per account in any rolling 24 hours
 --         (SQLSTATE PT429 after that).
@@ -345,7 +346,7 @@ begin
   end if;
 
   if v_claimed_by is not distinct from auth.uid() then
-    raise exception 'you already manage this place' using errcode = '22023';
+    raise exception 'you already manage this place' using errcode = 'PT409';
   end if;
 
   if v_certification_name is not null and v_category <> 'trainer' then
@@ -567,7 +568,9 @@ begin
     raise exception 'place % not found', p_place_id using errcode = 'P0002';
   end if;
 
-  if v_category <> 'trainer' then
+  -- Only a name needs a trainer. null always clears the mark, even when the place is no longer
+  -- a trainer (a business can change the category of its own pending place).
+  if p_certification_name is not null and v_category <> 'trainer' then
     raise exception 'only a trainer can be certified' using errcode = '22023';
   end if;
 
@@ -585,8 +588,8 @@ end;
 $$;
 
 comment on function public.admin_set_place_certified(uuid, text) is
-  'Admin only, trainers only. With a name (1-120 characters), marks the place certified after the '
-  'admin has seen proof; with null, removes the mark.';
+  'Admin only. With a name (1-120 characters), marks a trainer certified after the admin has '
+  'seen proof; with null, removes the mark from any place.';
 
 revoke execute on function public.admin_set_place_certified(uuid, text) from public, anon;
 

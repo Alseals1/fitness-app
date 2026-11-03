@@ -11,7 +11,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(83);
+select plan(88);
 
 -- ---------------------------------------------------------------------------
 -- place_submissions: RLS on, no policies, no API privileges.
@@ -359,7 +359,7 @@ select throws_ok(
 
 select throws_ok(
   $$select public.submit_place_claim('30000000-0000-4000-8000-000000000007', 'owner@example.com')$$,
-  '22023', null, 'A cannot claim a place it already manages'
+  'PT409', null, 'A cannot claim a place it already manages (PT409, not a form error)'
 );
 
 select isnt(
@@ -698,7 +698,67 @@ select results_eq(
   'removing the mark clears both columns'
 );
 
+-- A business changes its own pending, certified trainer to another category. A name then
+-- needs a trainer again, but null must still clear the mark.
 reset role;
+select set_config(
+  'test.a_trainer',
+  (select id::text from public.places where name = 'A Submitted Trainer (sample)'),
+  true
+);
+
+set local role authenticated;
+select set_config(
+  'request.jwt.claims',
+  '{"sub":"adadadad-0000-4000-8000-000000000000","role":"authenticated"}',
+  true
+);
+
+select lives_ok(
+  $$select public.admin_set_place_certified(current_setting('test.a_trainer')::uuid, 'ACE Personal Trainer')$$,
+  'the admin marks a pending trainer certified from the queue'
+);
+
+select set_config(
+  'request.jwt.claims',
+  '{"sub":"aaaaaaaa-0000-4000-8000-000000000000","role":"authenticated"}',
+  true
+);
+
+update public.places set category = 'gym' where id = current_setting('test.a_trainer')::uuid;
+
+reset role;
+
+select results_eq(
+  $$select category::text, is_certified from public.places where id = current_setting('test.a_trainer')::uuid$$,
+  $$values ('gym'::text, true)$$,
+  'A changed its own pending certified trainer into a gym'
+);
+
+set local role authenticated;
+select set_config(
+  'request.jwt.claims',
+  '{"sub":"adadadad-0000-4000-8000-000000000000","role":"authenticated"}',
+  true
+);
+
+select throws_ok(
+  $$select public.admin_set_place_certified(current_setting('test.a_trainer')::uuid, 'ACE Personal Trainer')$$,
+  '22023', null, 'a non-trainer still cannot be certified'
+);
+
+select lives_ok(
+  $$select public.admin_set_place_certified(current_setting('test.a_trainer')::uuid, null)$$,
+  'the admin can remove the mark from a place that is no longer a trainer'
+);
+
+reset role;
+
+select results_eq(
+  $$select is_certified, certification_name from public.places where id = current_setting('test.a_trainer')::uuid$$,
+  $$values (false, null::text)$$,
+  'removing the mark from a former trainer clears both columns'
+);
 
 select * from finish();
 
