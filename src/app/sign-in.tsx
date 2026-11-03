@@ -1,3 +1,4 @@
+import { Link } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -80,6 +81,9 @@ export default function SignInScreen() {
           onPress={onSubmit}
           disabled={submitting}
         />
+        <Link href="/sign-up" replace style={styles.link}>
+          {copy.signUp.link}
+        </Link>
       </View>
     </KeyboardAvoidingView>
   );
@@ -100,4 +104,5 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   error: { color: colors.danger, fontSize: fontSize.small, marginVertical: spacing.xs },
+  link: { fontSize: fontSize.body, color: colors.primary, fontWeight: '600', paddingVertical: spacing.sm },
 });
