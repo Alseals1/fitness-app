@@ -11,6 +11,7 @@ import {
   SHORTLIST_LIMIT,
   SHORTLIST_STORAGE_KEY,
   toggleId,
+  updateShortlist,
 } from './shortlist';
 
 /** A uuid-shaped place id ending in `n`. */
@@ -154,6 +155,65 @@ describe('saveShortlist and loadShortlist', () => {
       setItem: async () => {},
     };
     await expect(loadShortlist(storage)).resolves.toEqual([]);
+  });
+});
+
+describe('updateShortlist', () => {
+  it('adds to the list as stored, not to a copy a screen holds', async () => {
+    const { storage, items } = memoryStorage({
+      [SHORTLIST_STORAGE_KEY]: JSON.stringify({ version: 1, ids: [B, A] }),
+    });
+    await expect(updateShortlist(storage, C, true)).resolves.toEqual([C, B, A]);
+    expect(items.get(SHORTLIST_STORAGE_KEY)).toBe(JSON.stringify({ version: 1, ids: [C, B, A] }));
+  });
+
+  it('removes from the list as stored', async () => {
+    const { storage } = memoryStorage({ [SHORTLIST_STORAGE_KEY]: JSON.stringify({ version: 1, ids: [C, B, A] }) });
+    await expect(updateShortlist(storage, B, false)).resolves.toEqual([C, A]);
+    await expect(loadShortlist(storage)).resolves.toEqual([C, A]);
+  });
+
+  it('keeps every change when two screens update one after the other', async () => {
+    const { storage } = memoryStorage();
+    await updateShortlist(storage, A, true);
+    await updateShortlist(storage, B, true);
+    await updateShortlist(storage, A, false);
+    await updateShortlist(storage, C, true);
+    await expect(loadShortlist(storage)).resolves.toEqual([C, B]);
+  });
+
+  it('is a no-op for saving a saved place or removing one that is not saved', async () => {
+    const { storage } = memoryStorage({ [SHORTLIST_STORAGE_KEY]: JSON.stringify({ version: 1, ids: [B, A] }) });
+    await expect(updateShortlist(storage, B, true)).resolves.toEqual([B, A]);
+    await expect(updateShortlist(storage, C, false)).resolves.toEqual([B, A]);
+  });
+
+  it('starts from an empty list when nothing readable is stored', async () => {
+    await expect(updateShortlist(memoryStorage().storage, A, true)).resolves.toEqual([A]);
+    const { storage } = memoryStorage({ [SHORTLIST_STORAGE_KEY]: '{not json' });
+    await expect(updateShortlist(storage, A, true)).resolves.toEqual([A]);
+  });
+
+  it('rethrows a read error and writes nothing', async () => {
+    const setItem = jest.fn(async () => {});
+    const storage: KeyValueStorage = {
+      getItem: async () => {
+        throw new Error('read failed');
+      },
+      setItem,
+    };
+    await expect(updateShortlist(storage, A, true)).rejects.toThrow('read failed');
+    expect(setItem).not.toHaveBeenCalled();
+  });
+
+  it('rethrows a write error', async () => {
+    const storage: KeyValueStorage = {
+      getItem: async () => null,
+      setItem: async () => {
+        throw new Error('disk full');
+      },
+    };
+    await expect(updateShortlist(storage, A, true)).rejects.toThrow('disk full');
   });
 });
 

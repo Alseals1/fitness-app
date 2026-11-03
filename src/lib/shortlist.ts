@@ -34,6 +34,11 @@ export async function loadShortlist(storage: KeyValueStorage): Promise<string[]>
   } catch {
     return [];
   }
+  return parseStoredShortlist(raw);
+}
+
+/** The ids in a stored record. Nothing stored, bad JSON, another version or no `ids` give `[]`. */
+function parseStoredShortlist(raw: string | null): string[] {
   if (raw === null) return [];
 
   let record: unknown;
@@ -51,6 +56,17 @@ export async function saveShortlist(storage: KeyValueStorage, ids: readonly stri
   const clean = parseShortlistIds(ids);
   await storage.setItem(SHORTLIST_STORAGE_KEY, JSON.stringify({ version: SHORTLIST_VERSION, ids: clean }));
   return clean;
+}
+
+/**
+ * Saves (`save: true`) or removes one place, applied to the list as it is stored right now, not
+ * to a copy a screen holds, so a change made elsewhere is never lost. Returns what was saved.
+ * A read or write error is rethrown and nothing is written: a failed read must not be taken
+ * for an empty list and overwrite the saved places.
+ */
+export async function updateShortlist(storage: KeyValueStorage, id: string, save: boolean): Promise<string[]> {
+  const current = parseStoredShortlist(await storage.getItem(SHORTLIST_STORAGE_KEY));
+  return saveShortlist(storage, save ? addId(current, id) : removeId(current, id));
 }
 
 export function isSaved(ids: readonly string[], id: string): boolean {
