@@ -1,4 +1,6 @@
+import { copy } from './copy';
 import { rankPlaces, type RankedPlace } from './matching';
+import { AREA_LABELS, CATEGORY_LABELS, PRICE_LABELS } from './placeOptions';
 import type { PublicPlace } from './places';
 import { isEmptyPreferences, type Preferences } from './preferences';
 
@@ -28,4 +30,19 @@ export function resultsView(input: {
   const results = rankPlaces(places.places, preferences);
   if (results.length === 0) return { kind: 'empty', hasPreferences };
   return { kind: 'list', hasPreferences, results };
+}
+
+/** The "category · area · price" line on a result card. */
+export function resultCardMeta(result: RankedPlace): string {
+  const { place } = result;
+  return [CATEGORY_LABELS[place.category], AREA_LABELS[place.area], PRICE_LABELS[place.price_range]].join(' · ');
+}
+
+/** What a screen reader says for a result card: one link with the name, the details and the reasons. */
+export function resultCardAccessibilityLabel(result: RankedPlace): string {
+  const parts = [result.place.name, resultCardMeta(result)];
+  if (result.reasons.length > 0) {
+    parts.push(`${copy.results.reasonsLabel}: ${result.reasons.map((reason) => reason.label).join(', ')}`);
+  }
+  return parts.join('. ');
 }
