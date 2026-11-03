@@ -401,6 +401,7 @@ returns table (
   place_category public.place_category,
   place_status public.place_status,
   place_is_claimed boolean,
+  place_certification_name text,
   account_email text,
   verification_email text,
   verification_social text,
@@ -428,6 +429,7 @@ begin
     p.category,
     p.status,
     p.claimed_by is not null,
+    p.certification_name,
     u.email::text,
     s.verification_email,
     s.verification_social,
@@ -446,7 +448,8 @@ $$;
 
 comment on function public.admin_list_submissions() is
   'Admin only. Pending items: new-listing submissions whose place is still pending, and pending '
-  'claims, with the private verification details. Newest first, at most 100.';
+  'claims, with the private verification details and the place''s current certification (null when '
+  'not certified). Newest first, at most 100.';
 
 revoke execute on function public.admin_list_submissions() from public, anon;
 

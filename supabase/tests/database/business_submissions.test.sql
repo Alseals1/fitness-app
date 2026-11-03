@@ -529,10 +529,10 @@ select set_eq(
 );
 
 select results_eq(
-  $$select place_category::text, place_status::text, place_is_claimed, verification_email,
+  $$select place_category::text, place_status::text, place_is_claimed, place_certification_name, verification_email,
            verification_social, certification_name, note
     from public.admin_list_submissions() where place_name = 'A Submitted Studio (sample)'$$,
-  $$values ('studio'::text, 'pending'::text, false, 'owner-a@example.com'::text,
+  $$values ('studio'::text, 'pending'::text, false, null::text, 'owner-a@example.com'::text,
             'instagram.com/a_studio_sample'::text, null::text, 'I own it.'::text)$$,
   'the admin sees the private verification details'
 );

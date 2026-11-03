@@ -218,6 +218,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["submission_kind"]
           note: string
           place_category: Database["public"]["Enums"]["place_category"]
+          place_certification_name: string
           place_id: string
           place_is_claimed: boolean
           place_name: string
