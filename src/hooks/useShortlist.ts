@@ -3,11 +3,12 @@ import { useCallback, useRef, useState } from 'react';
 
 import { copy } from '../lib/copy';
 import { deviceStorage } from '../lib/deviceStorage';
-import { isSaved as isSavedIn, loadShortlist, saveShortlist, toggleId } from '../lib/shortlist';
+import { addId, isSaved as isSavedIn, loadShortlist, removeId, updateShortlist } from '../lib/shortlist';
 
 /**
- * Every shortlist write, in order, shared by all screens. A load waits for the writes before
- * it, so a screen coming back into focus never reads a list that is about to change.
+ * Every shortlist read and write, in order, shared by all screens. A load waits for the writes
+ * before it, so a screen coming back into focus never reads a list that is about to change.
+ * Each write reads the stored list itself, so it never builds on a stale copy.
  */
 let writeChain: Promise<unknown> = Promise.resolve();
 
@@ -17,6 +18,7 @@ export type Shortlist = {
   /** True only for the first load, so the screen does not flicker on later ones. */
   loading: boolean;
   isSaved: (id: string) => boolean;
+  /** Saves or removes a place. Ignored until the first load is done. */
   toggle: (id: string) => void;
   /** Set when the last change could not be saved; the list is then back to what is stored. */
   saveError: string | null;
@@ -30,8 +32,12 @@ export function useShortlist(): Shortlist {
   const [ids, setIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [saveError, setSaveError] = useState<string | null>(null);
-  // The newest list, so quick taps build on each other before a re-render.
+  // What this screen shows, so quick taps build on each other before a re-render.
   const idsRef = useRef<string[]>([]);
+  const loadingRef = useRef(true);
+  // Writes from this screen still in the chain. While any are, a stored list read earlier is
+  // older than what the screen shows, so only the last write's result is put on screen.
+  const pendingRef = useRef(0);
 
   const apply = useCallback((next: string[]) => {
     idsRef.current = next;
@@ -41,13 +47,14 @@ export function useShortlist(): Shortlist {
   useFocusEffect(
     useCallback(() => {
       let active = true;
-      writeChain
-        .then(() => loadShortlist(deviceStorage))
-        .then((loaded) => {
-          if (!active) return;
-          apply(loaded);
-          setLoading(false);
-        });
+      const load = writeChain.then(() => loadShortlist(deviceStorage));
+      writeChain = load;
+      load.then((loaded) => {
+        if (!active) return;
+        if (pendingRef.current === 0) apply(loaded);
+        loadingRef.current = false;
+        setLoading(false);
+      });
       return () => {
         active = false;
       };
@@ -56,16 +63,25 @@ export function useShortlist(): Shortlist {
 
   const toggle = useCallback(
     (id: string) => {
-      const next = toggleId(idsRef.current, id);
-      apply(next);
+      // Before the first load the screen does not know what is saved, so a tap could undo it.
+      if (loadingRef.current) return;
+      // Decide from what the button shows, then apply that to the stored list in the chain.
+      const save = !isSavedIn(idsRef.current, id);
+      apply(save ? addId(idsRef.current, id) : removeId(idsRef.current, id));
       setSaveError(null);
+      pendingRef.current += 1;
+
+      // A state update after unmount is a no-op.
+      const settle = (storedIds: string[]) => {
+        pendingRef.current -= 1;
+        if (pendingRef.current === 0) apply(storedIds);
+      };
       writeChain = writeChain
-        .then(() => saveShortlist(deviceStorage, next))
-        .catch(async () => {
-          // Put the list back to what is stored. A state update after unmount is a no-op.
-          const storedIds = await loadShortlist(deviceStorage);
+        .then(() => updateShortlist(deviceStorage, id, save))
+        .then(settle, async () => {
           setSaveError(copy.shortlist.saveFailed);
-          apply(storedIds);
+          // Put the list back to what is stored.
+          settle(await loadShortlist(deviceStorage));
         });
     },
     [apply],

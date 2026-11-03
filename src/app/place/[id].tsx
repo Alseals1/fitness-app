@@ -81,7 +81,7 @@ export default function PlaceScreen() {
 
 function Profile({ profile }: { profile: PlaceProfile }) {
   const [openError, setOpenError] = useState<string | null>(null);
-  const { isSaved, toggle, saveError } = useShortlist();
+  const { loading: shortlistLoading, isSaved, toggle, saveError } = useShortlist();
 
   const open = useCallback((url: string) => {
     setOpenError(null);
@@ -96,7 +96,10 @@ function Profile({ profile }: { profile: PlaceProfile }) {
       </Text>
       <Text style={styles.meta}>{[profile.category, profile.area].join(' · ')}</Text>
       <View style={styles.save}>
-        <SaveButton name={profile.name} saved={isSaved(profile.id)} onPress={() => toggle(profile.id)} />
+        {/* Hidden until the shortlist has loaded, so it never shows "Save" for a saved place. */}
+        {shortlistLoading ? null : (
+          <SaveButton name={profile.name} saved={isSaved(profile.id)} onPress={() => toggle(profile.id)} />
+        )}
         {saveError ? (
           <Text style={styles.error} accessibilityLiveRegion="polite">
             {saveError}
