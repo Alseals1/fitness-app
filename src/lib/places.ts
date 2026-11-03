@@ -69,3 +69,45 @@ export async function fetchApprovedPlaces(client: PlacesClient): Promise<PlacesR
     return { ok: false, message: copy.results.loadFailed };
   }
 }
+
+/** A place id is a uuid. Checked before any request, so a malformed id never reaches the database. */
+export const PLACE_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isPlaceId(id: unknown): id is string {
+  return typeof id === 'string' && PLACE_ID_PATTERN.test(id);
+}
+
+/** `place: null` means not found: no row, a row that is not approved, or a malformed id. */
+export type PlaceResult = { ok: true; place: PublicPlace | null } | { ok: false; message: string };
+
+/** Postgres "invalid text representation", for example an id that is not a uuid. */
+const INVALID_TEXT_REPRESENTATION = '22P02';
+
+/**
+ * One approved place, for anyone, with or without an account. The `status = 'approved'`
+ * filter is required, not only RLS: a signed-in admin (places_select_admin) or business
+ * (places_select_own) may also read pending rows, and a pending place must look exactly like
+ * a missing one, so nobody can find it by guessing its id.
+ *
+ * A malformed id is not found, and never reaches the database. Never throws, and never shows
+ * the database's own message.
+ */
+export async function fetchApprovedPlace(client: PlacesClient, id: unknown): Promise<PlaceResult> {
+  if (!isPlaceId(id)) return { ok: true, place: null };
+  try {
+    const { data, error } = await client
+      .from('places')
+      .select(PUBLIC_PLACE_SELECT)
+      .eq('id', id)
+      .eq('status', 'approved')
+      .maybeSingle()
+      .overrideTypes<PublicPlace, { merge: false }>();
+    if (error) {
+      if (error.code === INVALID_TEXT_REPRESENTATION) return { ok: true, place: null };
+      return { ok: false, message: copy.place.loadFailed };
+    }
+    return { ok: true, place: data ?? null };
+  } catch {
+    return { ok: false, message: copy.place.loadFailed };
+  }
+}

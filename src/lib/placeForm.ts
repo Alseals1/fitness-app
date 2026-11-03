@@ -57,9 +57,9 @@ export const PLACE_LIMITS = {
   phoneMax: 32,
 } as const;
 
-const WEBSITE_PATTERN = /^https?:\/\//i;
-const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-const INSTAGRAM_PATTERN = /^[A-Za-z0-9._]{1,30}$/;
+export const WEBSITE_PATTERN = /^https?:\/\//i;
+export const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+export const INSTAGRAM_PATTERN = /^[A-Za-z0-9._]{1,30}$/;
 
 export const PLACE_FORM_MESSAGES = {
   nameRequired: 'Enter a name.',
