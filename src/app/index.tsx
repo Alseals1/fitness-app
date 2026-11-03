@@ -35,6 +35,11 @@ export default function HomeScreen() {
         {copy.results.homeLink}
       </Link>
 
+      {/* Always shown: the shortlist is on the device and needs no account. */}
+      <Link href="/shortlist" style={styles.link}>
+        {copy.shortlist.homeLink}
+      </Link>
+
       {preferencesLoading ? null : (
         <Link href="/onboarding" style={styles.link}>
           {preferences === null ? copy.onboarding.setLink : copy.onboarding.changeLink}
