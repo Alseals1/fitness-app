@@ -11,7 +11,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(81);
+select plan(83);
 
 -- ---------------------------------------------------------------------------
 -- place_submissions: RLS on, no policies, no API privileges.
@@ -215,6 +215,22 @@ select throws_ok(
       p_price_range => 'budget', p_contact_phone => '205-555-0312',
       p_verification_email => 'owner@example.com', p_certification_name => 'RYT-200')$$,
   '22023', null, 'only a trainer can send a certification name'
+);
+
+select throws_ok(
+  $$select public.submit_new_place(
+      p_name => 'Long Website (sample)', p_category => 'gym', p_area => 'hoover',
+      p_price_range => 'budget', p_website_url => 'https://example.com/' || repeat('x', 2029),
+      p_verification_email => 'owner@example.com')$$,
+  '22023', null, 'a website over 2048 characters is refused'
+);
+
+select throws_ok(
+  $$select public.submit_new_place(
+      p_name => 'Long Email (sample)', p_category => 'gym', p_area => 'hoover',
+      p_price_range => 'budget', p_contact_email => repeat('x', 243) || '@example.com',
+      p_verification_email => 'owner@example.com')$$,
+  '22023', null, 'a public email over 254 characters is refused'
 );
 
 select throws_ok(

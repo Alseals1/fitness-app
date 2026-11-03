@@ -182,6 +182,11 @@ begin
     raise exception 'only a trainer has a certification' using errcode = '22023';
   end if;
 
+  -- The table limits most fields; these two have no length limit there. Public input, so cap them.
+  if char_length(btrim(p_website_url)) > 2048 or char_length(btrim(p_contact_email)) > 254 then
+    raise exception 'website or email too long' using errcode = '22023';
+  end if;
+
   perform public.enforce_submission_limit();
 
   -- Always pending, unverified and uncertified, whatever the caller sends. The table's check
