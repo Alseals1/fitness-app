@@ -64,4 +64,21 @@ export const copy = {
     saveFailed: "Couldn't save your answers. Try again.",
     progress: (step: number, total: number) => `${step} of ${total}`,
   },
+  results: {
+    /** The "why this fits you" tags on a result. */
+    reasons: {
+      goals: (list: string) => `Good for ${list}`,
+      beginnerFriendly: 'Beginner friendly',
+      allLevels: 'All levels welcome',
+      withinBudget: 'Within your budget',
+      /** `list` is already capitalized, for example "Morning and weekend". */
+      times: (list: string) => `${list} times`,
+      area: (area: string) => `In ${area}`,
+    },
+    /** Words used inside the reasons, in lower case. */
+    words: {
+      goals: { strength: 'strength', cardio: 'cardio', yoga: 'yoga', running: 'running' },
+      times: { mornings: 'morning', evenings: 'evening', weekends: 'weekend' },
+    },
+  },
 } as const;
