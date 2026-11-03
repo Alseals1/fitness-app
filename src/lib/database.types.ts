@@ -56,10 +56,64 @@ export type Database = {
           },
         ]
       }
+      place_submissions: {
+        Row: {
+          certification_name: string | null
+          claim_rejection_reason: string | null
+          claim_status: Database["public"]["Enums"]["claim_status"] | null
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["submission_kind"]
+          note: string | null
+          place_id: string
+          reviewed_at: string | null
+          submitted_by: string
+          verification_email: string | null
+          verification_social: string | null
+        }
+        Insert: {
+          certification_name?: string | null
+          claim_rejection_reason?: string | null
+          claim_status?: Database["public"]["Enums"]["claim_status"] | null
+          created_at?: string
+          id?: string
+          kind: Database["public"]["Enums"]["submission_kind"]
+          note?: string | null
+          place_id: string
+          reviewed_at?: string | null
+          submitted_by?: string
+          verification_email?: string | null
+          verification_social?: string | null
+        }
+        Update: {
+          certification_name?: string | null
+          claim_rejection_reason?: string | null
+          claim_status?: Database["public"]["Enums"]["claim_status"] | null
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["submission_kind"]
+          note?: string | null
+          place_id?: string
+          reviewed_at?: string | null
+          submitted_by?: string
+          verification_email?: string | null
+          verification_social?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "place_submissions_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       places: {
         Row: {
           area: Database["public"]["Enums"]["place_area"]
           category: Database["public"]["Enums"]["place_category"]
+          certification_name: string | null
           claimed_by: string | null
           contact_email: string | null
           contact_phone: string | null
@@ -67,6 +121,7 @@ export type Database = {
           description: string | null
           id: string
           instagram_handle: string | null
+          is_certified: boolean
           is_verified: boolean
           last_confirmed_at: string | null
           name: string
@@ -81,6 +136,7 @@ export type Database = {
         Insert: {
           area: Database["public"]["Enums"]["place_area"]
           category: Database["public"]["Enums"]["place_category"]
+          certification_name?: string | null
           claimed_by?: string | null
           contact_email?: string | null
           contact_phone?: string | null
@@ -88,6 +144,7 @@ export type Database = {
           description?: string | null
           id?: string
           instagram_handle?: string | null
+          is_certified?: boolean
           is_verified?: boolean
           last_confirmed_at?: string | null
           name: string
@@ -102,6 +159,7 @@ export type Database = {
         Update: {
           area?: Database["public"]["Enums"]["place_area"]
           category?: Database["public"]["Enums"]["place_category"]
+          certification_name?: string | null
           claimed_by?: string | null
           contact_email?: string | null
           contact_phone?: string | null
@@ -109,6 +167,7 @@ export type Database = {
           description?: string | null
           id?: string
           instagram_handle?: string | null
+          is_certified?: boolean
           is_verified?: boolean
           last_confirmed_at?: string | null
           name?: string
@@ -127,6 +186,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_approve_claim: {
+        Args: { p_submission_id: string }
+        Returns: undefined
+      }
       admin_create_place: {
         Args: {
           p_area: Database["public"]["Enums"]["place_area"]
@@ -145,8 +208,35 @@ export type Database = {
         }
         Returns: string
       }
+      admin_list_submissions: {
+        Args: never
+        Returns: {
+          account_email: string
+          certification_name: string
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["submission_kind"]
+          note: string
+          place_category: Database["public"]["Enums"]["place_category"]
+          place_certification_name: string
+          place_id: string
+          place_is_claimed: boolean
+          place_name: string
+          place_status: Database["public"]["Enums"]["place_status"]
+          verification_email: string
+          verification_social: string
+        }[]
+      }
+      admin_reject_claim: {
+        Args: { p_reason: string; p_submission_id: string }
+        Returns: undefined
+      }
       admin_reject_place: {
         Args: { p_place_id: string; p_reason: string }
+        Returns: undefined
+      }
+      admin_set_place_certified: {
+        Args: { p_certification_name: string; p_place_id: string }
         Returns: undefined
       }
       admin_set_place_status: {
@@ -160,9 +250,41 @@ export type Database = {
         Args: { p_place_id: string; p_verified: boolean }
         Returns: undefined
       }
+      enforce_submission_limit: { Args: never; Returns: undefined }
       is_admin: { Args: never; Returns: boolean }
+      submit_new_place: {
+        Args: {
+          p_area: Database["public"]["Enums"]["place_area"]
+          p_category: Database["public"]["Enums"]["place_category"]
+          p_certification_name?: string
+          p_contact_email?: string
+          p_contact_phone?: string
+          p_description?: string
+          p_instagram_handle?: string
+          p_name: string
+          p_note?: string
+          p_price_range: Database["public"]["Enums"]["price_range"]
+          p_schedule?: string
+          p_tags?: Database["public"]["Enums"]["place_tag"][]
+          p_verification_email?: string
+          p_verification_social?: string
+          p_website_url?: string
+        }
+        Returns: string
+      }
+      submit_place_claim: {
+        Args: {
+          p_certification_name?: string
+          p_note?: string
+          p_place_id: string
+          p_verification_email?: string
+          p_verification_social?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
+      claim_status: "pending" | "approved" | "rejected"
       place_area:
         | "downtown"
         | "southside"
@@ -190,6 +312,7 @@ export type Database = {
         | "evenings"
         | "weekends"
       price_range: "free" | "budget" | "moderate" | "premium"
+      submission_kind: "new_place" | "claim"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -317,6 +440,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      claim_status: ["pending", "approved", "rejected"],
       place_area: [
         "downtown",
         "southside",
@@ -346,6 +470,7 @@ export const Constants = {
         "weekends",
       ],
       price_range: ["free", "budget", "moderate", "premium"],
+      submission_kind: ["new_place", "claim"],
     },
   },
 } as const

@@ -19,6 +19,10 @@ describe('PUBLIC_PLACE_COLUMNS', () => {
     }
   });
 
+  it('includes the certified mark, which everyone may read', () => {
+    expect(PUBLIC_PLACE_COLUMNS).toEqual(expect.arrayContaining(['is_certified', 'certification_name']));
+  });
+
   it('has no duplicates', () => {
     expect(new Set(PUBLIC_PLACE_COLUMNS).size).toBe(PUBLIC_PLACE_COLUMNS.length);
   });
