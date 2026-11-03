@@ -1,4 +1,12 @@
-import { emptyPlaceForm, PLACE_FORM_MESSAGES, validatePlaceForm, type PlaceFormValues } from './placeForm';
+import {
+  emptyPlaceFields,
+  emptyPlaceForm,
+  PLACE_FORM_MESSAGES,
+  PLACE_LIMITS,
+  validatePlaceFields,
+  validatePlaceForm,
+  type PlaceFormValues,
+} from './placeForm';
 
 const valid: PlaceFormValues = {
   ...emptyPlaceForm,
@@ -126,5 +134,59 @@ describe('validatePlaceForm', () => {
     expect(Object.keys(errorsFor({ ...emptyPlaceForm })).sort()).toEqual(
       ['area', 'category', 'contact', 'name', 'price_range'].sort(),
     );
+  });
+});
+
+describe('validatePlaceFields', () => {
+  const fields = {
+    ...emptyPlaceFields,
+    name: ' Sample Gym (sample) ',
+    category: 'gym' as const,
+    area: 'hoover' as const,
+    price_range: 'budget' as const,
+    instagram_handle: '@sample_gym',
+  };
+
+  it('returns the cleaned place fields, with no status or verified key', () => {
+    const result = validatePlaceFields(fields);
+    expect(result).toEqual({
+      ok: true,
+      fields: {
+        p_name: 'Sample Gym (sample)',
+        p_category: 'gym',
+        p_area: 'hoover',
+        p_price_range: 'budget',
+        p_description: undefined,
+        p_schedule: undefined,
+        p_website_url: undefined,
+        p_contact_phone: undefined,
+        p_contact_email: undefined,
+        p_instagram_handle: 'sample_gym',
+        p_tags: [],
+      },
+    });
+    expect(result.ok && Object.keys(result.fields)).not.toEqual(
+      expect.arrayContaining(['p_status', 'p_is_verified']),
+    );
+  });
+
+  it('gives the same errors as validatePlaceForm', () => {
+    const result = validatePlaceFields({ ...emptyPlaceFields });
+    const form = validatePlaceForm({ ...emptyPlaceForm });
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.errors).toEqual(!form.ok && form.errors);
+  });
+
+  it(`limits the website to ${PLACE_LIMITS.websiteMax} characters`, () => {
+    const base = 'https://example.com/';
+    const ok = validatePlaceFields({ ...fields, website_url: base + 'x'.repeat(PLACE_LIMITS.websiteMax - base.length) });
+    expect(ok.ok).toBe(true);
+    const long = validatePlaceFields({ ...fields, website_url: base + 'x'.repeat(PLACE_LIMITS.websiteMax) });
+    expect(!long.ok && long.errors.website_url).toBe(PLACE_FORM_MESSAGES.websiteTooLong);
+  });
+
+  it(`limits the email to ${PLACE_LIMITS.emailMax} characters`, () => {
+    const long = validatePlaceFields({ ...fields, contact_email: 'x'.repeat(PLACE_LIMITS.emailMax) + '@example.com' });
+    expect(!long.ok && long.errors.contact_email).toBe(PLACE_FORM_MESSAGES.emailInvalid);
   });
 });

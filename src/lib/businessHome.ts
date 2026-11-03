@@ -14,5 +14,8 @@ export function businessHomeLinks(signedIn: boolean): BusinessHomeLink[] {
       { href: '/sign-in', label: copy.business.signInLink },
     ];
   }
-  return [];
+  return [
+    { href: '/business/new', label: copy.business.newLink },
+    { href: '/business/claim', label: copy.business.claimLink },
+  ];
 }

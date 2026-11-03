@@ -16,11 +16,7 @@ export default function BusinessHomeScreen() {
       <Text style={styles.intro}>{copy.business.intro}</Text>
       {loading ? null : (
         <>
-          {signedIn ? (
-            links.length === 0 ? <Text style={styles.hint}>{copy.business.comingSoon}</Text> : null
-          ) : (
-            <Text style={styles.hint}>{copy.business.signedOutHint}</Text>
-          )}
+          {signedIn ? null : <Text style={styles.hint}>{copy.business.signedOutHint}</Text>}
           {links.map((link) => (
             <Link key={link.href} href={link.href} style={styles.link}>
               {link.label}

@@ -1,14 +1,18 @@
 import type { Database, Enums } from './database.types';
 
 /**
- * The admin's "Add a place" form: its values, and a check that mirrors the check
- * constraints on public.places, so most mistakes are caught before the database sees them.
- * The database still has the final say.
+ * The place fields shared by the admin's "Add a place" form and the business form: their
+ * values, and a check that mirrors the check constraints on public.places, so most mistakes
+ * are caught before the database sees them. The database still has the final say.
  */
 
 export type CreatePlaceArgs = Database['public']['Functions']['admin_create_place']['Args'];
 
-export type PlaceFormValues = {
+/** The cleaned place fields, as `p_*` arguments. Both admin_create_place and submit_new_place take these. */
+export type PlaceFields = Omit<CreatePlaceArgs, 'p_status' | 'p_is_verified'>;
+
+/** The place fields a person types or picks. */
+export type PlaceFieldValues = {
   name: string;
   category: Enums<'place_category'> | null;
   area: Enums<'place_area'> | null;
@@ -20,19 +24,25 @@ export type PlaceFormValues = {
   contact_email: string;
   instagram_handle: string;
   tags: Enums<'place_tag'>[];
+};
+
+/** The admin's form: the place fields, plus two switches only an admin has. */
+export type PlaceFormValues = PlaceFieldValues & {
   /** On: the place is public at once. Off (the default): it waits in the queue. */
   approveNow: boolean;
   /** Only with proof (PRD: never show a verified mark without it). */
   verified: boolean;
 };
 
-export type PlaceFormField = Exclude<keyof PlaceFormValues, 'tags' | 'approveNow' | 'verified'> | 'contact';
+export type PlaceFormField = Exclude<keyof PlaceFieldValues, 'tags'> | 'contact';
 
 export type PlaceFormErrors = Partial<Record<PlaceFormField, string>>;
 
+export type PlaceFieldsResult = { ok: true; fields: PlaceFields } | { ok: false; errors: PlaceFormErrors };
+
 export type PlaceFormResult = { ok: true; args: CreatePlaceArgs } | { ok: false; errors: PlaceFormErrors };
 
-export const emptyPlaceForm: PlaceFormValues = {
+export const emptyPlaceFields: PlaceFieldValues = {
   name: '',
   category: null,
   area: null,
@@ -44,6 +54,10 @@ export const emptyPlaceForm: PlaceFormValues = {
   contact_email: '',
   instagram_handle: '',
   tags: [],
+};
+
+export const emptyPlaceForm: PlaceFormValues = {
+  ...emptyPlaceFields,
   approveNow: false,
   verified: false,
 };
@@ -55,6 +69,10 @@ export const PLACE_LIMITS = {
   scheduleMax: 500,
   phoneMin: 7,
   phoneMax: 32,
+  /** Not limited by a table constraint; checked by submit_new_place. */
+  websiteMax: 2048,
+  emailMax: 254,
+  instagramMax: 30,
 } as const;
 
 export const WEBSITE_PATTERN = /^https?:\/\//i;
@@ -70,6 +88,7 @@ export const PLACE_FORM_MESSAGES = {
   descriptionTooLong: `Keep the description to ${PLACE_LIMITS.descriptionMax} characters or less.`,
   scheduleTooLong: `Keep the schedule to ${PLACE_LIMITS.scheduleMax} characters or less.`,
   websiteInvalid: 'Start the website with http:// or https://.',
+  websiteTooLong: `Keep the website to ${PLACE_LIMITS.websiteMax} characters or less.`,
   phoneInvalid: `Enter a phone number of ${PLACE_LIMITS.phoneMin} to ${PLACE_LIMITS.phoneMax} characters.`,
   emailInvalid: 'Enter a valid email address.',
   instagramInvalid: 'Use up to 30 letters, numbers, dots or underscores.',
@@ -82,7 +101,8 @@ function optional(value: string): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
-export function validatePlaceForm(values: PlaceFormValues): PlaceFormResult {
+/** Checks and cleans the place fields. */
+export function validatePlaceFields(values: PlaceFieldValues): PlaceFieldsResult {
   const errors: PlaceFormErrors = {};
 
   const name = values.name.trim();
@@ -105,6 +125,7 @@ export function validatePlaceForm(values: PlaceFormValues): PlaceFormResult {
 
   const website = optional(values.website_url);
   if (website && !WEBSITE_PATTERN.test(website)) errors.website_url = PLACE_FORM_MESSAGES.websiteInvalid;
+  else if (website && website.length > PLACE_LIMITS.websiteMax) errors.website_url = PLACE_FORM_MESSAGES.websiteTooLong;
 
   const phone = optional(values.contact_phone);
   if (phone && (phone.length < PLACE_LIMITS.phoneMin || phone.length > PLACE_LIMITS.phoneMax)) {
@@ -112,7 +133,9 @@ export function validatePlaceForm(values: PlaceFormValues): PlaceFormResult {
   }
 
   const email = optional(values.contact_email);
-  if (email && !EMAIL_PATTERN.test(email)) errors.contact_email = PLACE_FORM_MESSAGES.emailInvalid;
+  if (email && (email.length > PLACE_LIMITS.emailMax || !EMAIL_PATTERN.test(email))) {
+    errors.contact_email = PLACE_FORM_MESSAGES.emailInvalid;
+  }
 
   // Stored without the leading '@'.
   const instagram = optional(values.instagram_handle.trim().replace(/^@/, ''));
@@ -126,7 +149,7 @@ export function validatePlaceForm(values: PlaceFormValues): PlaceFormResult {
     return { ok: false, errors };
   }
 
-  const args: CreatePlaceArgs = {
+  const fields: PlaceFields = {
     p_name: name,
     p_category: values.category,
     p_area: values.area,
@@ -138,6 +161,16 @@ export function validatePlaceForm(values: PlaceFormValues): PlaceFormResult {
     p_contact_email: email,
     p_instagram_handle: instagram,
     p_tags: [...new Set(values.tags)],
+  };
+  return { ok: true, fields };
+}
+
+/** The admin's form: the place fields, plus the status and verified switches. */
+export function validatePlaceForm(values: PlaceFormValues): PlaceFormResult {
+  const checked = validatePlaceFields(values);
+  if (!checked.ok) return checked;
+  const args: CreatePlaceArgs = {
+    ...checked.fields,
     p_status: values.approveNow ? 'approved' : 'pending',
     p_is_verified: values.verified,
   };
