@@ -48,7 +48,7 @@ export default function HomeScreen() {
 
       {/* Always shown: businesses add or claim a listing here. */}
       <Link href="/business" style={styles.link}>
-        {copy.business.homeLink}
+        {copy.business.listLink}
       </Link>
 
       {/* Browsing never needs an account: this only offers the sign-in for admins and businesses. */}

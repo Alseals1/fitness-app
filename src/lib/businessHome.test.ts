@@ -9,9 +9,10 @@ describe('businessHomeLinks', () => {
     ]);
   });
 
-  it('offers no account links when signed in', () => {
-    expect(businessHomeLinks(true).map((link) => link.href)).not.toEqual(
-      expect.arrayContaining(['/sign-up', '/sign-in']),
-    );
+  it('offers a new listing or a claim when signed in', () => {
+    expect(businessHomeLinks(true)).toEqual([
+      { href: '/business/new', label: copy.business.newLink },
+      { href: '/business/claim', label: copy.business.claimLink },
+    ]);
   });
 });
