@@ -33,3 +33,6 @@ export const fontSize = {
 } as const;
 
 export const radius = 8;
+
+/** The smallest touch target, in points, for anything tappable. */
+export const minTouchTarget = 44;
