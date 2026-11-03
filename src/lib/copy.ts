@@ -116,4 +116,19 @@ export const copy = {
     /** PRD: a short safety note on trainer profiles. */
     trainerSafety: 'Meeting a new trainer? Meet somewhere public, like a gym, studio or busy park.',
   },
+  shortlist: {
+    title: 'Your shortlist',
+    homeLink: 'Your shortlist',
+    resultsLink: 'See your shortlist',
+    save: 'Save',
+    saved: 'Saved',
+    /** Screen-reader labels for the save button. */
+    saveLabel: (name: string) => `Save ${name} to your shortlist`,
+    removeLabel: (name: string) => `Remove ${name} from your shortlist`,
+    empty: 'No saved places yet. Tap Save on a place to keep it here.',
+    browseLink: 'Browse places',
+    loadFailed: "Couldn't load your shortlist. Check your connection and try again.",
+    retry: 'Try again',
+    saveFailed: "Couldn't update your shortlist. Try again.",
+  },
 } as const;

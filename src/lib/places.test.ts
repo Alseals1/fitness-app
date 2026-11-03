@@ -2,6 +2,7 @@ import { copy } from './copy';
 import {
   fetchApprovedPlace,
   fetchApprovedPlaces,
+  fetchApprovedPlacesByIds,
   isPlaceId,
   PUBLIC_PLACE_COLUMNS,
   PUBLIC_PLACE_SELECT,
@@ -40,6 +41,7 @@ function fakeClient(response: Response | (() => Promise<Response>)) {
   const builder = {
     select: (...args: unknown[]) => (calls.push({ method: 'select', args }), builder),
     eq: (...args: unknown[]) => (calls.push({ method: 'eq', args }), builder),
+    in: (...args: unknown[]) => (calls.push({ method: 'in', args }), builder),
     order: (...args: unknown[]) => (calls.push({ method: 'order', args }), builder),
     limit: (...args: unknown[]) => (calls.push({ method: 'limit', args }), builder),
     maybeSingle: (...args: unknown[]) => (calls.push({ method: 'maybeSingle', args }), builder),
@@ -152,5 +154,61 @@ describe('fetchApprovedPlace', () => {
   it('never throws when the request itself rejects', async () => {
     const { client } = fakeClient(() => Promise.reject(new Error('Network request failed')));
     await expect(fetchApprovedPlace(client, PLACE_ID)).resolves.toEqual({ ok: false, message: copy.place.loadFailed });
+  });
+});
+
+const OTHER_ID = '5eed0000-0000-4000-8000-000000000002';
+
+describe('fetchApprovedPlacesByIds', () => {
+  it('reads the public columns of the approved places with those ids', async () => {
+    const rows = [{ id: PLACE_ID, name: 'Sample (sample)', status: 'approved' }];
+    const { client, calls } = fakeClient({ data: rows, error: null });
+
+    await expect(fetchApprovedPlacesByIds(client, [PLACE_ID, OTHER_ID])).resolves.toEqual({ ok: true, data: rows });
+    expect(calls).toEqual([
+      { method: 'from', args: ['places'] },
+      { method: 'select', args: [PUBLIC_PLACE_SELECT] },
+      { method: 'in', args: ['id', [PLACE_ID, OTHER_ID]] },
+      { method: 'eq', args: ['status', 'approved'] },
+      { method: 'limit', args: [2] },
+      { method: 'overrideTypes', args: [] },
+    ]);
+  });
+
+  it.each([[[]], [['abc', '', '5eed0000-0000-4000-8000-00000000001']]])(
+    'makes no request and returns nothing for %p',
+    async (ids) => {
+      const { client, calls } = fakeClient({ data: null, error: null });
+      await expect(fetchApprovedPlacesByIds(client, ids)).resolves.toEqual({ ok: true, data: [] });
+      expect(calls).toEqual([]);
+    },
+  );
+
+  it('leaves malformed and duplicate ids out of the request', async () => {
+    const { client, calls } = fakeClient({ data: [], error: null });
+    await fetchApprovedPlacesByIds(client, ['abc', PLACE_ID, `${PLACE_ID} `, PLACE_ID, OTHER_ID]);
+    expect(calls).toContainEqual({ method: 'in', args: ['id', [PLACE_ID, OTHER_ID]] });
+    expect(calls).toContainEqual({ method: 'limit', args: [2] });
+  });
+
+  it('returns an empty list when there is no data', async () => {
+    const { client } = fakeClient({ data: null, error: null });
+    await expect(fetchApprovedPlacesByIds(client, [PLACE_ID])).resolves.toEqual({ ok: true, data: [] });
+  });
+
+  it('returns a plain message, not the database message, on an error', async () => {
+    const { client } = fakeClient({ data: null, error: { code: 'XX000', message: 'raw database text' } });
+    await expect(fetchApprovedPlacesByIds(client, [PLACE_ID])).resolves.toEqual({
+      ok: false,
+      message: copy.shortlist.loadFailed,
+    });
+  });
+
+  it('never throws when the request itself rejects', async () => {
+    const { client } = fakeClient(() => Promise.reject(new Error('Network request failed')));
+    await expect(fetchApprovedPlacesByIds(client, [PLACE_ID])).resolves.toEqual({
+      ok: false,
+      message: copy.shortlist.loadFailed,
+    });
   });
 });
