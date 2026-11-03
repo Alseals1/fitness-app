@@ -1,6 +1,6 @@
 import type { PublicPlace } from './places';
 import { emptyPreferences, type Preferences } from './preferences';
-import { resultsView, type PlacesLoad } from './results';
+import { resultCardAccessibilityLabel, resultCardMeta, resultsView, type PlacesLoad } from './results';
 
 function makePlace(overrides: Partial<PublicPlace>): PublicPlace {
   return {
@@ -93,5 +93,27 @@ describe('resultsView', () => {
       kind: 'empty',
       hasPreferences: false,
     });
+  });
+});
+
+describe('resultCardAccessibilityLabel', () => {
+  it('reads the name, the details and the reasons as one label', () => {
+    const result = {
+      place: makePlace({ name: 'Z Yoga (sample)', category: 'studio', area: 'southside', price_range: 'budget' }),
+      score: 5,
+      reasons: [
+        { key: 'goals' as const, label: 'Good for yoga' },
+        { key: 'budget' as const, label: 'Within your budget' },
+      ],
+    };
+    expect(resultCardMeta(result)).toBe('Studio · Southside · Budget');
+    expect(resultCardAccessibilityLabel(result)).toBe(
+      'Z Yoga (sample). Studio · Southside · Budget. Why this fits you: Good for yoga, Within your budget',
+    );
+  });
+
+  it('leaves out the reasons part when there are none', () => {
+    const result = { place: makePlace({ name: 'A Gym (sample)' }), score: 0, reasons: [] };
+    expect(resultCardAccessibilityLabel(result)).toBe('A Gym (sample). Gym · Downtown · Moderate');
   });
 });

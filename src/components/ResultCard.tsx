@@ -1,35 +1,40 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Link } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { copy } from '../lib/copy';
 import type { RankedPlace } from '../lib/matching';
-import { AREA_LABELS, CATEGORY_LABELS, PRICE_LABELS } from '../lib/placeOptions';
+import { resultCardAccessibilityLabel, resultCardMeta } from '../lib/results';
 import { colors, fontSize, radius, spacing } from '../lib/theme';
 
 type Props = { result: RankedPlace };
 
-/** One place in the results, with its "why this fits you" tags. Not pressable yet: the place profile is a separate issue. */
+/**
+ * One place in the results, with its "why this fits you" tags. The whole card is one link to
+ * the place profile, and a screen reader reads it as one element.
+ */
 export function ResultCard({ result }: Props) {
   const { place, reasons } = result;
   return (
-    <View style={styles.card}>
-      <Text style={styles.name}>{place.name}</Text>
-      <Text style={styles.meta}>
-        {[CATEGORY_LABELS[place.category], AREA_LABELS[place.area], PRICE_LABELS[place.price_range]].join(' · ')}
-      </Text>
-      {reasons.length > 0 ? (
-        <View
-          style={styles.reasons}
-          accessible
-          accessibilityLabel={`${copy.results.reasonsLabel}: ${reasons.map((reason) => reason.label).join(', ')}`}
-        >
-          {reasons.map((reason) => (
-            <View key={reason.key} style={styles.chip}>
-              <Text style={styles.chipText}>{reason.label}</Text>
-            </View>
-          ))}
-        </View>
-      ) : null}
-    </View>
+    <Link href={{ pathname: '/place/[id]', params: { id: place.id } }} asChild>
+      <Pressable
+        accessibilityRole="link"
+        accessibilityLabel={resultCardAccessibilityLabel(result)}
+        accessibilityHint={copy.results.openHint}
+        style={({ pressed }) => [styles.card, pressed && styles.dimmed]}
+      >
+        <Text style={styles.name}>{place.name}</Text>
+        <Text style={styles.meta}>{resultCardMeta(result)}</Text>
+        {reasons.length > 0 ? (
+          <View style={styles.reasons}>
+            {reasons.map((reason) => (
+              <View key={reason.key} style={styles.chip}>
+                <Text style={styles.chipText}>{reason.label}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
+      </Pressable>
+    </Link>
   );
 }
 
@@ -42,6 +47,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.xs,
   },
+  dimmed: { opacity: 0.6 },
   name: { fontSize: fontSize.title, fontWeight: '700', color: colors.text },
   meta: { fontSize: fontSize.body, color: colors.mutedText },
   reasons: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: spacing.sm },

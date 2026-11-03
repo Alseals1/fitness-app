@@ -1,6 +1,8 @@
 import { copy } from './copy';
 import {
+  fetchApprovedPlace,
   fetchApprovedPlaces,
+  isPlaceId,
   PUBLIC_PLACE_COLUMNS,
   PUBLIC_PLACE_SELECT,
   PUBLIC_PLACES_LIMIT,
@@ -40,6 +42,7 @@ function fakeClient(response: Response | (() => Promise<Response>)) {
     eq: (...args: unknown[]) => (calls.push({ method: 'eq', args }), builder),
     order: (...args: unknown[]) => (calls.push({ method: 'order', args }), builder),
     limit: (...args: unknown[]) => (calls.push({ method: 'limit', args }), builder),
+    maybeSingle: (...args: unknown[]) => (calls.push({ method: 'maybeSingle', args }), builder),
     overrideTypes: (...args: unknown[]) => (calls.push({ method: 'overrideTypes', args }), builder),
     then: (onFulfilled: (value: Response) => unknown, onRejected?: (reason: unknown) => unknown) =>
       resolve().then(onFulfilled, onRejected),
@@ -79,5 +82,75 @@ describe('fetchApprovedPlaces', () => {
   it('never throws when the request itself rejects', async () => {
     const { client } = fakeClient(() => Promise.reject(new Error('Network request failed')));
     await expect(fetchApprovedPlaces(client)).resolves.toEqual({ ok: false, message: copy.results.loadFailed });
+  });
+});
+
+const PLACE_ID = '5eed0000-0000-4000-8000-000000000001';
+
+describe('isPlaceId', () => {
+  it.each([PLACE_ID, PLACE_ID.toUpperCase(), '5EED0000-0000-4000-8000-00000000000a'])('accepts %p', (id) => {
+    expect(isPlaceId(id)).toBe(true);
+  });
+
+  it.each([
+    'abc',
+    '',
+    undefined,
+    null,
+    42,
+    [PLACE_ID],
+    '5eed0000-0000-4000-8000-00000000001',
+    '5eed0000-0000-4000-8000-0000000000012',
+    ` ${PLACE_ID}`,
+    `${PLACE_ID}\n`,
+    '5eed0000-0000-4000-8000-00000000000g',
+  ])('rejects %p', (id) => {
+    expect(isPlaceId(id)).toBe(false);
+  });
+});
+
+describe('fetchApprovedPlace', () => {
+  it('reads the public columns of one approved place by id', async () => {
+    const row = { id: PLACE_ID, name: 'Sample (sample)', status: 'approved' };
+    const { client, calls } = fakeClient({ data: row, error: null });
+
+    await expect(fetchApprovedPlace(client, PLACE_ID)).resolves.toEqual({ ok: true, place: row });
+    expect(calls).toEqual([
+      { method: 'from', args: ['places'] },
+      { method: 'select', args: [PUBLIC_PLACE_SELECT] },
+      { method: 'eq', args: ['id', PLACE_ID] },
+      { method: 'eq', args: ['status', 'approved'] },
+      { method: 'maybeSingle', args: [] },
+      { method: 'overrideTypes', args: [] },
+    ]);
+  });
+
+  it('is not found when there is no approved row', async () => {
+    const { client } = fakeClient({ data: null, error: null });
+    await expect(fetchApprovedPlace(client, PLACE_ID)).resolves.toEqual({ ok: true, place: null });
+  });
+
+  it.each(['abc', '', undefined, ['a', 'b'], '5eed0000-0000-4000-8000-00000000001'])(
+    'is not found for the malformed id %p, without a request',
+    async (id) => {
+      const { client, calls } = fakeClient({ data: null, error: null });
+      await expect(fetchApprovedPlace(client, id)).resolves.toEqual({ ok: true, place: null });
+      expect(calls).toEqual([]);
+    },
+  );
+
+  it('is not found when the database says the id is not a uuid (22P02)', async () => {
+    const { client } = fakeClient({ data: null, error: { code: '22P02', message: 'invalid input syntax for type uuid' } });
+    await expect(fetchApprovedPlace(client, PLACE_ID)).resolves.toEqual({ ok: true, place: null });
+  });
+
+  it('returns a plain message, not the database message, on any other error', async () => {
+    const { client } = fakeClient({ data: null, error: { code: 'XX000', message: 'raw database text' } });
+    await expect(fetchApprovedPlace(client, PLACE_ID)).resolves.toEqual({ ok: false, message: copy.place.loadFailed });
+  });
+
+  it('never throws when the request itself rejects', async () => {
+    const { client } = fakeClient(() => Promise.reject(new Error('Network request failed')));
+    await expect(fetchApprovedPlace(client, PLACE_ID)).resolves.toEqual({ ok: false, message: copy.place.loadFailed });
   });
 });
