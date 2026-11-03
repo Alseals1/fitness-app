@@ -129,6 +129,33 @@ describe('toPlaceProfile', () => {
   });
 });
 
+describe('certified', () => {
+  it('shows the certification for a certified trainer', () => {
+    const profile = toPlaceProfile(
+      makePlace({ category: 'trainer', is_certified: true, certification_name: '  NASM-CPT ' }),
+    );
+    expect(profile.certified).toBe(copy.place.certified('NASM-CPT'));
+  });
+
+  it('shows nothing when the trainer is not certified', () => {
+    // A name without the admin-set flag must never show (the database forbids it, but check anyway).
+    const profile = toPlaceProfile(makePlace({ category: 'trainer', is_certified: false, certification_name: 'NASM-CPT' }));
+    expect(profile).not.toHaveProperty('certified');
+  });
+
+  it('shows nothing for a certified trainer without a name', () => {
+    expect(toPlaceProfile(makePlace({ category: 'trainer', is_certified: true, certification_name: '  ' }))).not.toHaveProperty(
+      'certified',
+    );
+  });
+
+  it.each(['studio', 'gym', 'run_club'] as const)('shows nothing for a %s', (category) => {
+    expect(toPlaceProfile(makePlace({ category, is_certified: true, certification_name: 'NASM-CPT' }))).not.toHaveProperty(
+      'certified',
+    );
+  });
+});
+
 describe('phoneLink', () => {
   it.each([
     ['205-555-0101', 'tel:2055550101'],

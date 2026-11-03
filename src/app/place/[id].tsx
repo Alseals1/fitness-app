@@ -95,6 +95,7 @@ function Profile({ profile }: { profile: PlaceProfile }) {
         {profile.name}
       </Text>
       <Text style={styles.meta}>{[profile.category, profile.area].join(' · ')}</Text>
+      {profile.certified ? <Text style={styles.certified}>{profile.certified}</Text> : null}
       <View style={styles.save}>
         {/* Hidden until the shortlist has loaded, so it never shows "Save" for a saved place. */}
         {shortlistLoading ? null : (
@@ -198,6 +199,7 @@ const styles = StyleSheet.create({
   heading: { fontSize: fontSize.heading, fontWeight: '700', color: colors.text },
   title: { fontSize: fontSize.title, fontWeight: '700', color: colors.text, textAlign: 'center' },
   meta: { fontSize: fontSize.body, color: colors.mutedText },
+  certified: { fontSize: fontSize.body, fontWeight: '600', color: colors.success },
   save: { alignItems: 'flex-start', gap: spacing.xs },
   section: { gap: spacing.xs },
   sectionLabel: { fontSize: fontSize.small, fontWeight: '700', color: colors.mutedText },
