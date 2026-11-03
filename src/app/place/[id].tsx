@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '../../components/Button';
+import { SaveButton } from '../../components/SaveButton';
+import { useShortlist } from '../../hooks/useShortlist';
 import { copy } from '../../lib/copy';
 import { placeProfileView, type ContactLink, type PlaceLoad, type PlaceProfile } from '../../lib/placeProfile';
 import { fetchApprovedPlace, type PlaceResult } from '../../lib/places';
@@ -79,6 +81,7 @@ export default function PlaceScreen() {
 
 function Profile({ profile }: { profile: PlaceProfile }) {
   const [openError, setOpenError] = useState<string | null>(null);
+  const { isSaved, toggle, saveError } = useShortlist();
 
   const open = useCallback((url: string) => {
     setOpenError(null);
@@ -92,6 +95,14 @@ function Profile({ profile }: { profile: PlaceProfile }) {
         {profile.name}
       </Text>
       <Text style={styles.meta}>{[profile.category, profile.area].join(' · ')}</Text>
+      <View style={styles.save}>
+        <SaveButton name={profile.name} saved={isSaved(profile.id)} onPress={() => toggle(profile.id)} />
+        {saveError ? (
+          <Text style={styles.error} accessibilityLiveRegion="polite">
+            {saveError}
+          </Text>
+        ) : null}
+      </View>
 
       {profile.description ? (
         <Section label={copy.place.about}>
@@ -184,6 +195,7 @@ const styles = StyleSheet.create({
   heading: { fontSize: fontSize.heading, fontWeight: '700', color: colors.text },
   title: { fontSize: fontSize.title, fontWeight: '700', color: colors.text, textAlign: 'center' },
   meta: { fontSize: fontSize.body, color: colors.mutedText },
+  save: { alignItems: 'flex-start', gap: spacing.xs },
   section: { gap: spacing.xs },
   sectionLabel: { fontSize: fontSize.small, fontWeight: '700', color: colors.mutedText },
   body: { fontSize: fontSize.body, color: colors.text },
