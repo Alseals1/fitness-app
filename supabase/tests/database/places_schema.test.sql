@@ -3,7 +3,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(36);
+select plan(42);
 
 -- Table and columns
 select has_table('public', 'places', 'places table exists');
@@ -30,7 +30,9 @@ select columns_are(
     'claimed_by',
     'last_confirmed_at',
     'created_at',
-    'updated_at'
+    'updated_at',
+    'is_certified',
+    'certification_name'
   ],
   'places has exactly the planned columns (no city column)'
 );
@@ -46,6 +48,9 @@ select col_not_null('public', 'places', 'category', 'category is required');
 select col_not_null('public', 'places', 'area', 'area is required');
 select col_not_null('public', 'places', 'price_range', 'price_range is required');
 select col_is_null('public', 'places', 'claimed_by', 'claimed_by is optional');
+select col_type_is('public', 'places', 'is_certified', 'boolean', 'is_certified is a boolean');
+select col_not_null('public', 'places', 'is_certified', 'is_certified is required');
+select col_type_is('public', 'places', 'certification_name', 'text', 'certification_name is text');
 
 -- Enum values
 select enum_has_labels('public', 'place_category', array['studio', 'trainer', 'run_club', 'gym'], 'category values');
@@ -67,6 +72,7 @@ select enum_has_labels(
 -- Defaults
 select col_default_is('public', 'places', 'status', 'pending'::public.place_status, 'status defaults to pending');
 select col_default_is('public', 'places', 'is_verified', false, 'is_verified defaults to false');
+select col_default_is('public', 'places', 'is_certified', false, 'is_certified defaults to false');
 select col_default_is('public', 'places', 'tags', '{}'::public.place_tag[], 'tags defaults to empty');
 select col_default_is('public', 'places', 'submitted_by', 'auth.uid()', 'submitted_by defaults to auth.uid()');
 
@@ -137,6 +143,22 @@ select throws_ok(
   '22P02',
   null,
   'a tag outside the value list is rejected'
+);
+
+select throws_ok(
+  $$insert into public.places (name, category, area, price_range, contact_phone, is_certified)
+    values ('Certified No Name (sample)', 'trainer', 'hoover', 'budget', '205-555-0100', true)$$,
+  '23514',
+  null,
+  'a certified place needs a certification name'
+);
+
+select throws_ok(
+  $$insert into public.places (name, category, area, price_range, contact_phone, certification_name)
+    values ('Name Not Certified (sample)', 'trainer', 'hoover', 'budget', '205-555-0100', 'NASM-CPT')$$,
+  '23514',
+  null,
+  'a certification name is set only on a certified place'
 );
 
 -- A valid insert gets the defaults.

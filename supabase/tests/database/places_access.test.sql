@@ -9,7 +9,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(52);
+select plan(48);
 
 -- ---------------------------------------------------------------------------
 -- Column privileges: exactly the planned columns, nothing more.
@@ -20,7 +20,7 @@ select set_eq(
     where table_schema = 'public' and table_name = 'places' and grantee = 'anon' and privilege_type = 'SELECT'$$,
   array['id', 'name', 'category', 'description', 'area', 'price_range', 'schedule', 'website_url',
         'contact_phone', 'contact_email', 'instagram_handle', 'tags', 'status', 'is_verified',
-        'last_confirmed_at', 'created_at', 'updated_at'],
+        'last_confirmed_at', 'created_at', 'updated_at', 'is_certified', 'certification_name'],
   'anon may select every column except submitted_by and claimed_by'
 );
 
@@ -29,16 +29,14 @@ select set_eq(
     where table_schema = 'public' and table_name = 'places' and grantee = 'authenticated' and privilege_type = 'SELECT'$$,
   array['id', 'name', 'category', 'description', 'area', 'price_range', 'schedule', 'website_url',
         'contact_phone', 'contact_email', 'instagram_handle', 'tags', 'status', 'is_verified',
-        'last_confirmed_at', 'created_at', 'updated_at'],
+        'last_confirmed_at', 'created_at', 'updated_at', 'is_certified', 'certification_name'],
   'authenticated may select every column except submitted_by and claimed_by'
 );
 
-select set_eq(
-  $$select column_name::text from information_schema.column_privileges
+select is_empty(
+  $$select 1 from information_schema.column_privileges
     where table_schema = 'public' and table_name = 'places' and grantee = 'authenticated' and privilege_type = 'INSERT'$$,
-  array['name', 'category', 'description', 'area', 'price_range', 'schedule', 'website_url',
-        'contact_phone', 'contact_email', 'instagram_handle', 'tags'],
-  'authenticated may insert only the editable columns'
+  'authenticated may not insert any column: submit_new_place is the only way to submit'
 );
 
 select set_eq(
@@ -164,48 +162,12 @@ select results_eq(
   'A sees approved places and its own pending one, not B''s pending, rejected or hidden places'
 );
 
-select lives_ok(
+select throws_ok(
   $$insert into public.places (name, category, area, price_range, contact_phone, tags)
     values ('A New Place (sample)', 'trainer', 'hoover', 'budget', '205-555-0199', '{beginner_friendly}')$$,
-  'A can submit a place with the editable fields'
-);
-
-select results_eq(
-  $$select status::text, is_verified from public.places where name = 'A New Place (sample)'$$,
-  $$values ('pending'::text, false)$$,
-  'a submitted place is pending and unverified, and A can see it'
-);
-
-select throws_ok(
-  $$insert into public.places (name, category, area, price_range, contact_phone, status)
-    values ('A Sneaky Approved (sample)', 'gym', 'hoover', 'budget', '205-555-0198', 'approved')$$,
   '42501',
   null,
-  'A cannot set status on insert'
-);
-
-select throws_ok(
-  $$insert into public.places (name, category, area, price_range, contact_phone, is_verified)
-    values ('A Sneaky Verified (sample)', 'gym', 'hoover', 'budget', '205-555-0197', true)$$,
-  '42501',
-  null,
-  'A cannot set is_verified on insert'
-);
-
-select throws_ok(
-  $$insert into public.places (name, category, area, price_range, contact_phone, submitted_by)
-    values ('A As B (sample)', 'gym', 'hoover', 'budget', '205-555-0196', 'bbbbbbbb-0000-4000-8000-000000000000')$$,
-  '42501',
-  null,
-  'A cannot set submitted_by on insert'
-);
-
-select throws_ok(
-  $$insert into public.places (name, category, area, price_range, contact_phone, last_confirmed_at)
-    values ('A Confirmed (sample)', 'gym', 'hoover', 'budget', '205-555-0195', now())$$,
-  '42501',
-  null,
-  'A cannot set last_confirmed_at on insert'
+  'A cannot insert a place directly: submit_new_place is the only way to submit'
 );
 
 -- Updates
@@ -237,6 +199,20 @@ select throws_ok(
   '42501',
   null,
   'A cannot update is_verified'
+);
+
+select throws_ok(
+  $$update public.places set is_certified = true where id = '10000000-0000-4000-8000-000000000005'$$,
+  '42501',
+  null,
+  'A cannot update is_certified'
+);
+
+select throws_ok(
+  $$update public.places set certification_name = 'NASM-CPT' where id = '10000000-0000-4000-8000-000000000005'$$,
+  '42501',
+  null,
+  'A cannot update certification_name'
 );
 
 select throws_ok(
@@ -279,12 +255,6 @@ select throws_ok(
 
 -- Check the effects as the database owner.
 reset role;
-
-select is(
-  (select submitted_by from public.places where name = 'A New Place (sample)'),
-  'aaaaaaaa-0000-4000-8000-000000000000'::uuid,
-  'a submitted place records the submitter'
-);
 
 select is(
   (select name from public.places where id = '10000000-0000-4000-8000-000000000002'),
