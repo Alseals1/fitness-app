@@ -16,9 +16,9 @@ export const LEVEL_LABELS: Record<Level, string> = {
 };
 
 export const TIME_LABELS: Record<PreferredTime, string> = {
-  mornings: 'Mornings',
-  evenings: 'Evenings',
-  weekends: 'Weekends',
+  mornings: TAG_LABELS.mornings,
+  evenings: TAG_LABELS.evenings,
+  weekends: TAG_LABELS.weekends,
 };
 
 export const GOAL_OPTIONS = toOptions(GOALS, GOAL_LABELS);

@@ -12,7 +12,8 @@ export type Goal = (typeof GOALS)[number];
 export const LEVELS = ['beginner', 'some_experience', 'experienced'] as const;
 export type Level = (typeof LEVELS)[number];
 
-export const TIMES = ['mornings', 'evenings', 'weekends'] as const;
+/** Preferred times are place tags too (added by the place_time_tags migration), so matching can compare them directly. */
+export const TIMES = ['mornings', 'evenings', 'weekends'] as const satisfies readonly Enums<'place_tag'>[];
 export type PreferredTime = (typeof TIMES)[number];
 
 export const BUDGETS = Constants.public.Enums.price_range;

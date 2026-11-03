@@ -41,6 +41,9 @@ export const TAG_LABELS: Record<Enums<'place_tag'>, string> = {
   drop_in: 'Drop-in',
   free_trial: 'Free trial',
   outdoor: 'Outdoor',
+  mornings: 'Mornings',
+  evenings: 'Evenings',
+  weekends: 'Weekends',
 };
 
 export type Option<T extends string> = { value: T; label: string };

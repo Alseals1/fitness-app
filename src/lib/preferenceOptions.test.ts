@@ -1,3 +1,4 @@
+import { Constants } from './database.types';
 import { TAG_LABELS } from './placeOptions';
 import {
   GOAL_LABELS,
@@ -36,4 +37,13 @@ describe.each(cases)('%s options', (_name, values, labels, options) => {
 
 it('goal labels match the place tag labels', () => {
   for (const goal of GOALS) expect(GOAL_LABELS[goal]).toBe(TAG_LABELS[goal]);
+});
+
+it('time labels match the place tag labels', () => {
+  for (const time of TIMES) expect(TIME_LABELS[time]).toBe(TAG_LABELS[time]);
+});
+
+it('every preferred time is a place tag', () => {
+  const tags: readonly string[] = Constants.public.Enums.place_tag;
+  for (const time of TIMES) expect(tags).toContain(time);
 });

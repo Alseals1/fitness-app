@@ -5,6 +5,10 @@
 -- 1 rejected, 1 hidden, so the access rules can be tried out. Three approved places are
 -- verified. submitted_by is null: these stand for listings entered by hand.
 --
+-- Time tags (mornings, evenings, weekends) follow each place's schedule text: mornings means
+-- something before noon, evenings something from 5pm, weekends something on Sat or Sun. A
+-- schedule that doesn't say (for example "By appointment, weekdays") gets no time tag.
+--
 -- This runs as the database owner, so status and is_verified can be set directly here.
 
 insert into public.places (
@@ -36,7 +40,7 @@ insert into public.places (
     '205-555-0101',
     'hello@example.com',
     'sample_southside_yoga',
-    '{yoga,beginner_friendly,drop_in}',
+    '{yoga,beginner_friendly,drop_in,mornings,weekends}',
     'approved',
     true,
     '2026-10-15 14:00:00+00'
@@ -53,7 +57,7 @@ insert into public.places (
     '205-555-0102',
     null,
     null,
-    '{strength,cardio,all_levels,free_trial}',
+    '{strength,cardio,all_levels,free_trial,mornings,evenings,weekends}',
     'approved',
     true,
     '2026-10-20 16:30:00+00'
@@ -70,7 +74,7 @@ insert into public.places (
     null,
     null,
     'sample_lakeview_runs',
-    '{running,outdoor,beginner_friendly}',
+    '{running,outdoor,beginner_friendly,evenings}',
     'approved',
     true,
     '2026-10-28 12:00:00+00'
@@ -104,7 +108,7 @@ insert into public.places (
     '205-555-0105',
     null,
     null,
-    '{cardio,all_levels,drop_in}',
+    '{cardio,all_levels,drop_in,mornings,evenings,weekends}',
     'approved',
     false,
     null
@@ -121,7 +125,7 @@ insert into public.places (
     '205-555-0106',
     'members@example.com',
     null,
-    '{strength,cardio,all_levels}',
+    '{strength,cardio,all_levels,mornings,evenings,weekends}',
     'approved',
     false,
     null
@@ -138,7 +142,7 @@ insert into public.places (
     null,
     'trails@example.com',
     'sample_vestavia_trails',
-    '{running,outdoor}',
+    '{running,outdoor,mornings,weekends}',
     'pending',
     false,
     null
@@ -155,7 +159,7 @@ insert into public.places (
     '205-555-0108',
     null,
     null,
-    '{strength,outdoor,beginner_friendly}',
+    '{strength,outdoor,beginner_friendly,mornings,evenings}',
     'pending',
     false,
     null
@@ -189,7 +193,7 @@ insert into public.places (
     '205-555-0110',
     null,
     null,
-    '{strength}',
+    '{strength,mornings,evenings,weekends}',
     'hidden',
     false,
     '2026-09-01 10:00:00+00'

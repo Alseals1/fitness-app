@@ -186,6 +186,9 @@ export type Database = {
         | "drop_in"
         | "free_trial"
         | "outdoor"
+        | "mornings"
+        | "evenings"
+        | "weekends"
       price_range: "free" | "budget" | "moderate" | "premium"
     }
     CompositeTypes: {
@@ -338,6 +341,9 @@ export const Constants = {
         "drop_in",
         "free_trial",
         "outdoor",
+        "mornings",
+        "evenings",
+        "weekends",
       ],
       price_range: ["free", "budget", "moderate", "premium"],
     },
