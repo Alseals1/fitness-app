@@ -65,6 +65,14 @@ export const copy = {
     progress: (step: number, total: number) => `${step} of ${total}`,
   },
   results: {
+    title: 'Places for you',
+    homeLink: 'See places that fit you',
+    noPreferences: "Tell us what you like and we'll show the best fits first.",
+    empty: 'Nothing here yet. Check back soon.',
+    loadFailed: "Couldn't load places. Check your connection and try again.",
+    retry: 'Try again',
+    /** Read out before the reason tags, for screen readers. */
+    reasonsLabel: 'Why this fits you',
     /** The "why this fits you" tags on a result. */
     reasons: {
       goals: (list: string) => `Good for ${list}`,

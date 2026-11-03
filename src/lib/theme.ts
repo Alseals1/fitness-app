@@ -12,6 +12,9 @@ export const colors = {
   primaryText: '#fff',
   danger: '#c62828',
   success: '#2e7d32',
+  /** The "why this fits you" tags: dark blue on pale blue, well above 4.5:1. */
+  reasonBackground: '#e8efff',
+  reasonText: '#1a3a8f',
 } as const;
 
 export const spacing = {

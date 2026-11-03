@@ -14,6 +14,8 @@ function RootNavigator() {
       <Stack.Screen name="index" options={{ title: copy.appName }} />
       {/* Open to everyone: onboarding is optional and needs no account. */}
       <Stack.Screen name="onboarding" options={{ title: copy.onboarding.title }} />
+      {/* Open to everyone: browsing results needs no account. */}
+      <Stack.Screen name="results" options={{ title: copy.results.title }} />
       <Stack.Protected guard={!session}>
         <Stack.Screen name="sign-in" options={{ title: copy.signIn }} />
       </Stack.Protected>

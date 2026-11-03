@@ -30,6 +30,11 @@ export default function HomeScreen() {
       <Text style={styles.title}>{copy.appName}</Text>
       <Text style={styles.subtitle}>{copy.tagline}</Text>
 
+      {/* Always shown: browsing needs no account and no preferences. */}
+      <Link href="/results" style={styles.link}>
+        {copy.results.homeLink}
+      </Link>
+
       {preferencesLoading ? null : (
         <Link href="/onboarding" style={styles.link}>
           {preferences === null ? copy.onboarding.setLink : copy.onboarding.changeLink}
