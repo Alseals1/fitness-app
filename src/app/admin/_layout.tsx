@@ -1,11 +1,13 @@
 import { Stack } from 'expo-router';
 
+import { useStackScreenOptions } from '../../hooks/useStackScreenOptions';
 import { copy } from '../../lib/copy';
-import { stackScreenOptions } from '../../lib/stackScreenOptions';
 
 export default function AdminLayout() {
+  const screenOptions = useStackScreenOptions();
+
   return (
-    <Stack screenOptions={stackScreenOptions}>
+    <Stack screenOptions={screenOptions}>
       <Stack.Screen name="index" options={{ title: copy.admin }} />
       <Stack.Screen name="new-place" options={{ title: copy.newPlace.title }} />
     </Stack>

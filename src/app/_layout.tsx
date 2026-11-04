@@ -2,16 +2,18 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
 import { AuthProvider, useAuth } from '../hooks/useAuth';
+import { MotionProvider } from '../hooks/useMotion';
+import { useStackScreenOptions } from '../hooks/useStackScreenOptions';
 import { copy } from '../lib/copy';
-import { stackScreenOptions } from '../lib/stackScreenOptions';
 
 function RootNavigator() {
   const { session, isAdmin } = useAuth();
+  const screenOptions = useStackScreenOptions();
 
   // The guards are a convenience: RLS and the admin_* functions are the real protection.
   // When a guard is false, Expo Router sends the user to the anchor route (index).
   return (
-    <Stack screenOptions={stackScreenOptions}>
+    <Stack screenOptions={screenOptions}>
       <Stack.Screen name="index" options={{ title: copy.appName }} />
       {/* Open to everyone: onboarding is optional and needs no account. */}
       <Stack.Screen name="onboarding" options={{ title: copy.onboarding.title }} />
@@ -37,8 +39,10 @@ function RootNavigator() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <RootNavigator />
-      <StatusBar style="auto" />
+      <MotionProvider>
+        <RootNavigator />
+        <StatusBar style="auto" />
+      </MotionProvider>
     </AuthProvider>
   );
 }
