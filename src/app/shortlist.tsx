@@ -4,8 +4,10 @@ import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-nativ
 
 import { Button } from '../components/Button';
 import { ResultCard } from '../components/ResultCard';
+import { useMotion } from '../hooks/useMotion';
 import { useShortlist } from '../hooks/useShortlist';
 import { copy } from '../lib/copy';
+import { entranceFor } from '../lib/motion';
 import { fetchApprovedPlacesByIds } from '../lib/places';
 import type { PlacesLoad } from '../lib/results';
 import { shortlistView } from '../lib/shortlistView';
@@ -21,6 +23,10 @@ export default function ShortlistScreen() {
   const [places, setPlaces] = useState<PlacesLoad>({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);
   const [focusCount, setFocusCount] = useState(0);
+  const { reduced } = useMotion();
+  // Only the cards on the list's first paint animate in. Rows that mount later (scrolling,
+  // a refocus) appear at once, so a virtualized list never replays the entrance.
+  const [entered, setEntered] = useState(false);
 
   // The same ids in another order (a re-save moves one to the front) need no new fetch.
   const idsKey = useMemo(() => [...ids].sort().join(','), [ids]);
@@ -98,9 +104,15 @@ export default function ShortlistScreen() {
         contentContainerStyle={styles.list}
         // The cards read their saved state from the shortlist, so a toggle must repaint them.
         extraData={ids}
+        onLayout={() => setEntered(true)}
         ListHeaderComponent={saveErrorText}
-        renderItem={({ item }) => (
-          <ResultCard result={item} saved={isSaved(item.place.id)} onToggleSave={toggle} />
+        renderItem={({ item, index }) => (
+          <ResultCard
+            result={item}
+            saved={isSaved(item.place.id)}
+            onToggleSave={toggle}
+            entrance={entranceFor({ index, reduced, animate: !entered })}
+          />
         )}
       />
     </View>
