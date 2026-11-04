@@ -1,5 +1,5 @@
 import { contrastRatio } from './contrast';
-import { colors, contrastPairs, minTouchTarget, radius, shadow, typography } from './theme';
+import { colors, contrastPairs, minTouchTarget, motion, radius, shadow, typography } from './theme';
 
 describe('theme', () => {
   it.each(contrastPairs.map((p) => [p.fg, p.bg, p.min] as const))('%s on %s is at least %s:1', (fg, bg, min) => {
@@ -26,6 +26,40 @@ describe('theme', () => {
     for (const value of Object.values(shadow)) {
       expect(typeof value).toBe('string');
       expect(value).not.toMatch(/elevation/);
+    }
+  });
+
+  it('keeps durations ordered and short', () => {
+    const { fast, base, slow } = motion.duration;
+    expect(fast).toBeLessThan(base);
+    expect(base).toBeLessThan(slow);
+    for (const value of [fast, base, slow]) {
+      expect(value).toBeLessThanOrEqual(400);
+    }
+  });
+
+  it('uses a spring that never overshoots', () => {
+    expect(motion.spring.dampingRatio).toBeGreaterThanOrEqual(1);
+  });
+
+  it('keeps press scales gentle', () => {
+    for (const value of Object.values(motion.pressScale)) {
+      expect(value).toBeGreaterThanOrEqual(0.95);
+      expect(value).toBeLessThan(1);
+    }
+  });
+
+  it('keeps the save bloom small', () => {
+    expect(motion.bloomScale).toBeGreaterThan(1);
+    expect(motion.bloomScale).toBeLessThanOrEqual(1.1);
+  });
+
+  it('has a valid ease-out curve', () => {
+    expect(motion.easeOut).toHaveLength(4);
+    const [x1, , x2] = motion.easeOut;
+    for (const x of [x1, x2]) {
+      expect(x).toBeGreaterThanOrEqual(0);
+      expect(x).toBeLessThanOrEqual(1);
     }
   });
 
