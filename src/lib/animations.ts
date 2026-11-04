@@ -3,7 +3,7 @@
  * transition or a layout animation is made, so components never invent their own timing.
  * The rules for when to use each live in `./motion`, which stays free of Reanimated.
  */
-import { Easing, FadeIn, Keyframe, ReduceMotion, cubicBezier } from 'react-native-reanimated';
+import { Easing, FadeIn, ReduceMotion, cubicBezier } from 'react-native-reanimated';
 import type { CSSAnimationProperties, CSSTransitionProperties } from 'react-native-reanimated';
 
 import type { Entrance } from './motion';
@@ -30,23 +30,33 @@ export const pressScaleTransition: CSSTransitionProperties = {
 };
 
 /**
- * The layout animation for a row's entrance, or `undefined` for none. Each one ignores the
- * system setting (`ReduceMotion.Never`) because `useMotion` already picked the reduced form.
+ * A row's entrance as a CSS animation, or `undefined` for none. A CSS animation rather than a
+ * layout animation (`entering`): on web, Reanimated pins a custom-keyframe `entering` view to
+ * `position: absolute` once it ends, which breaks a list's flow. `backwards` keeps a delayed row
+ * hidden until its turn.
  */
-export function enteringFor(entrance: Entrance) {
+export function entranceStyle(entrance: Entrance): CSSAnimationProperties | undefined {
   switch (entrance.kind) {
     case 'none':
       return undefined;
     case 'fade':
-      return FadeIn.duration(entrance.duration).reduceMotion(ReduceMotion.Never);
+      return {
+        animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
+        animationDuration: entrance.duration,
+        animationTimingFunction: cssEaseOut,
+        animationFillMode: 'backwards',
+      };
     case 'rise':
-      return new Keyframe({
-        0: { opacity: 0, transform: [{ translateY: entrance.offsetY }] },
-        100: { opacity: 1, transform: [{ translateY: 0 }], easing: easeOut },
-      })
-        .duration(entrance.duration)
-        .delay(entrance.delay)
-        .reduceMotion(ReduceMotion.Never);
+      return {
+        animationName: {
+          from: { opacity: 0, transform: [{ translateY: entrance.offsetY }] },
+          to: { opacity: 1, transform: [{ translateY: 0 }] },
+        },
+        animationDuration: entrance.duration,
+        animationDelay: entrance.delay,
+        animationTimingFunction: cssEaseOut,
+        animationFillMode: 'backwards',
+      };
   }
 }
 
