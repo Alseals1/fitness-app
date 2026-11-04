@@ -1,9 +1,10 @@
 import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '../components/Button';
 import { ResultCard } from '../components/ResultCard';
+import { ResultListSkeleton } from '../components/Skeleton';
 import { useMotion } from '../hooks/useMotion';
 import { useShortlist } from '../hooks/useShortlist';
 import { copy } from '../lib/copy';
@@ -68,7 +69,7 @@ export default function ShortlistScreen() {
   if (view.kind === 'loading') {
     return (
       <View style={styles.container}>
-        <ActivityIndicator style={styles.fill} color={colors.primary} />
+        <ResultListSkeleton />
       </View>
     );
   }
@@ -121,7 +122,6 @@ export default function ShortlistScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  fill: { flex: 1 },
   centered: { alignItems: 'center', justifyContent: 'center', padding: spacing.xl, gap: spacing.md },
   list: { padding: spacing.lg, gap: spacing.md },
   link: { ...typography.bodyStrong, color: colors.primary, paddingVertical: spacing.sm },
