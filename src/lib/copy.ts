@@ -11,6 +11,7 @@ export const copy = {
   cancel: 'Cancel',
   verified: 'Verified',
   certified: 'Certified',
+  loading: 'Loading…',
   signUp: {
     title: 'Create an account',
     intro: "For businesses that want to list or claim a place. You don't need an account to browse.",
