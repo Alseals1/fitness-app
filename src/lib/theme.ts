@@ -155,14 +155,3 @@ export const contrastPairs: readonly ContrastPair[] = [
   { fg: 'focusRing', bg: 'background', min: 3 },
   { fg: 'focusRing', bg: 'surface', min: 3 },
 ];
-
-/**
- * The old type sizes. Kept only while the screens move to `typography`; removed in the same PR.
- * @deprecated Use `typography`.
- */
-export const fontSize = {
-  small: 13,
-  body: 16,
-  title: 20,
-  heading: 28,
-} as const;
