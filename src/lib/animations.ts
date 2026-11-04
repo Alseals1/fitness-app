@@ -12,7 +12,7 @@ import { motion } from './theme';
 /** The ease-out curve for CSS transitions and animations. */
 export const cssEaseOut = cubicBezier(...motion.easeOut);
 
-/** The ease-out curve for `withTiming` and keyframes. */
+/** The ease-out curve for `withTiming`. */
 export const easeOut = Easing.bezier(...motion.easeOut);
 
 /** Press feedback: the scale and the pressed colours ease together over `fast`. */
