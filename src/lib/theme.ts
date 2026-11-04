@@ -33,6 +33,8 @@ export type Palette = {
   reasonText: string;
   disabledBackground: string;
   disabledText: string;
+  /** Skeleton loader blocks. Decorative only, never a text or control colour. */
+  skeleton: string;
 };
 
 /** The light palette. Every text pair here is checked in `theme.test.ts` (see `contrastPairs`). */
@@ -55,6 +57,7 @@ const lightPalette = {
   reasonText: '#1D4F4B',
   disabledBackground: '#E7E3DB',
   disabledText: '#5F635E',
+  skeleton: '#E4DFD6',
 } as const satisfies Palette;
 
 // Dark mode is not built yet. When it is, pick the palette at runtime here; callers keep `colors`.
@@ -123,6 +126,32 @@ export const shadow = {
 /** Only for plain pressable text links in screens. Controls show pressed with a colour instead. */
 export const opacity = {
   pressed: 0.7,
+} as const;
+
+/**
+ * Motion. Every duration, curve, spring and scale the app animates with lives here, so nothing
+ * invents its own timing. Plain numbers only: `src/lib/animations.ts` builds the Reanimated objects.
+ */
+export const motion = {
+  /** Durations in ms: `fast` for press and colour, `base` for entrances, `slow` for larger moves, `pulse` for one skeleton beat. */
+  duration: {
+    fast: 150,
+    base: 250,
+    slow: 350,
+    pulse: 1000,
+  },
+  /** The one ease-out curve, as cubic-bezier control points (x1, y1, x2, y2). */
+  easeOut: [0.23, 1, 0.32, 1],
+  /** The one spring: critically damped (`dampingRatio` 1), so it never overshoots. */
+  spring: { duration: 400, dampingRatio: 1 },
+  /** How far a control or a card shrinks while pressed. */
+  pressScale: { control: 0.97, card: 0.98 },
+  /** How far the save button grows at the top of its bloom. */
+  bloomScale: 1.06,
+  /** The first-paint card entrance: rise `offsetY` pt, each row `stagger` ms later, at most `maxStaggered` rows staggered. */
+  entrance: { offsetY: 8, stagger: 40, maxStaggered: 6 },
+  /** The lowest opacity of the skeleton pulse. */
+  skeletonDimOpacity: 0.5,
 } as const;
 
 /** The smallest touch target, in points, for anything tappable. */
