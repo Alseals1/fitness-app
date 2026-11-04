@@ -65,7 +65,8 @@ export function ClaimCard({ claim, onApprove, onReject, onCertify, onUncertify, 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radius,
+    borderRadius: radius.lg,
+    borderCurve: 'continuous',
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.lg,

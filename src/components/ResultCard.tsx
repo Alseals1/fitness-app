@@ -49,7 +49,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: spacing.sm,
     backgroundColor: colors.surface,
-    borderRadius: radius,
+    borderRadius: radius.lg,
+    borderCurve: 'continuous',
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.lg,
@@ -61,7 +62,7 @@ const styles = StyleSheet.create({
   reasons: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: spacing.sm },
   chip: {
     backgroundColor: colors.reasonBackground,
-    borderRadius: radius * 2,
+    borderRadius: radius.full,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
   },

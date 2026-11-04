@@ -207,14 +207,15 @@ const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   chip: {
     backgroundColor: colors.reasonBackground,
-    borderRadius: radius * 2,
+    borderRadius: radius.full,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
   },
   chipText: { fontSize: fontSize.small, fontWeight: '600', color: colors.reasonText },
   note: {
     backgroundColor: colors.surface,
-    borderRadius: radius,
+    borderRadius: radius.lg,
+    borderCurve: 'continuous',
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.md,

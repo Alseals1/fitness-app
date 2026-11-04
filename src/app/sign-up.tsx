@@ -120,7 +120,8 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius,
+    borderRadius: radius.md,
+    borderCurve: 'continuous',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     fontSize: fontSize.body,
