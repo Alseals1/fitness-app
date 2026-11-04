@@ -17,7 +17,7 @@ import { PLACE_LIMITS } from '../../lib/placeForm';
 import { AREA_LABELS, CATEGORY_LABELS } from '../../lib/placeOptions';
 import { fetchApprovedPlaces, type PublicPlace } from '../../lib/places';
 import { supabase } from '../../lib/supabase';
-import { colors, fontSize, minTouchTarget, radius, spacing } from '../../lib/theme';
+import { borderWidth, colors, minTouchTarget, opacity, radius, spacing, typography } from '../../lib/theme';
 
 type Load = { state: 'loading' } | { state: 'failed'; message: string } | { state: 'ready'; places: PublicPlace[] };
 
@@ -167,17 +167,18 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.background },
   form: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xl * 2 },
   chosen: { gap: spacing.xs },
-  placeName: { fontSize: fontSize.body, fontWeight: '600', color: colors.text },
+  placeName: { ...typography.bodyStrong, color: colors.text },
   failed: { gap: spacing.sm, alignItems: 'flex-start' },
   match: {
     minHeight: minTouchTarget,
     justifyContent: 'center',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderWidth: 1,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border,
-    borderRadius: radius,
+    borderRadius: radius.lg,
+    borderCurve: 'continuous',
     backgroundColor: colors.surface,
   },
-  pressed: { opacity: 0.6 },
+  pressed: { opacity: opacity.pressed },
 });

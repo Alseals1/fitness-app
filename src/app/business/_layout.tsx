@@ -2,13 +2,14 @@ import { Stack } from 'expo-router';
 
 import { useAuth } from '../../hooks/useAuth';
 import { copy } from '../../lib/copy';
+import { stackScreenOptions } from '../../lib/stackScreenOptions';
 
 export default function BusinessLayout() {
   const { session } = useAuth();
 
   // The guard is a convenience: the submit functions refuse anyone not signed in.
   return (
-    <Stack>
+    <Stack screenOptions={stackScreenOptions}>
       {/* Open to everyone: signed out it explains how to get an account. */}
       <Stack.Screen name="index" options={{ title: copy.business.title }} />
       <Stack.Protected guard={!!session}>

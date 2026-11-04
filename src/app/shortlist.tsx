@@ -10,7 +10,7 @@ import { fetchApprovedPlacesByIds } from '../lib/places';
 import type { PlacesLoad } from '../lib/results';
 import { shortlistView } from '../lib/shortlistView';
 import { supabase } from '../lib/supabase';
-import { colors, fontSize, spacing } from '../lib/theme';
+import { colors, spacing, typography } from '../lib/theme';
 
 /**
  * The places saved on this device, newest first. Open to everyone: the shortlist needs no
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   centered: { alignItems: 'center', justifyContent: 'center', padding: spacing.xl, gap: spacing.md },
   list: { padding: spacing.lg, gap: spacing.md },
-  link: { fontSize: fontSize.body, fontWeight: '600', color: colors.primary, paddingVertical: spacing.sm },
-  error: { fontSize: fontSize.body, color: colors.danger, textAlign: 'center' },
-  muted: { fontSize: fontSize.body, color: colors.mutedText, textAlign: 'center' },
+  link: { ...typography.bodyStrong, color: colors.primary, paddingVertical: spacing.sm },
+  error: { ...typography.body, color: colors.danger, textAlign: 'center' },
+  muted: { ...typography.body, color: colors.mutedText, textAlign: 'center' },
 });

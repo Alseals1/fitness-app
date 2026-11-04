@@ -28,7 +28,7 @@ import {
 import { copy } from '../../lib/copy';
 import type { PublicPlace } from '../../lib/places';
 import { supabase } from '../../lib/supabase';
-import { colors, fontSize, spacing } from '../../lib/theme';
+import { colors, spacing, typography } from '../../lib/theme';
 
 export default function AdminQueueScreen() {
   const { signOut } = useAuth();
@@ -198,14 +198,13 @@ const styles = StyleSheet.create({
   list: { padding: spacing.lg },
   separator: { height: spacing.md },
   sectionTitle: {
-    fontSize: fontSize.title,
-    fontWeight: '700',
+    ...typography.title,
     color: colors.text,
     marginTop: spacing.lg,
     marginBottom: spacing.sm,
   },
   notice: { gap: spacing.sm },
-  error: { fontSize: fontSize.body, color: colors.danger },
-  addLink: { fontSize: fontSize.body, fontWeight: '600', color: colors.primary, paddingVertical: spacing.sm },
-  muted: { fontSize: fontSize.body, color: colors.mutedText, textAlign: 'center', marginBottom: spacing.md },
+  error: { ...typography.body, color: colors.danger },
+  addLink: { ...typography.bodyStrong, color: colors.primary, paddingVertical: spacing.sm },
+  muted: { ...typography.body, color: colors.mutedText, textAlign: 'center', marginBottom: spacing.md },
 });

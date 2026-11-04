@@ -5,7 +5,7 @@ import { showsCertifyControl, type Submission } from '../lib/admin';
 import { copy } from '../lib/copy';
 import { AREA_LABELS, CATEGORY_LABELS, PRICE_LABELS, TAG_LABELS } from '../lib/placeOptions';
 import type { PublicPlace } from '../lib/places';
-import { colors, fontSize, radius, spacing } from '../lib/theme';
+import { borderWidth, colors, radius, spacing, typography } from '../lib/theme';
 import { Button } from './Button';
 import { CertifyControl } from './CertifyControl';
 import { RejectReasonBox } from './RejectReasonBox';
@@ -115,18 +115,19 @@ export function PendingPlaceCard({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radius,
-    borderWidth: 1,
+    borderRadius: radius.lg,
+    borderCurve: 'continuous',
+    borderWidth: borderWidth.thin,
     borderColor: colors.border,
     padding: spacing.lg,
     gap: spacing.xs,
   },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' },
-  name: { fontSize: fontSize.title, fontWeight: '700', color: colors.text, flexShrink: 1 },
-  verified: { fontSize: fontSize.small, fontWeight: '600', color: colors.success },
-  meta: { fontSize: fontSize.body, color: colors.mutedText },
-  body: { fontSize: fontSize.body, color: colors.text, marginTop: spacing.xs },
-  small: { fontSize: fontSize.small, color: colors.mutedText },
-  error: { fontSize: fontSize.small, color: colors.danger, marginTop: spacing.sm },
+  name: { ...typography.title, color: colors.text, flexShrink: 1 },
+  verified: { ...typography.label, color: colors.success },
+  meta: { ...typography.body, color: colors.mutedText },
+  body: { ...typography.body, color: colors.text, marginTop: spacing.xs },
+  small: { ...typography.caption, color: colors.mutedText },
+  error: { ...typography.caption, color: colors.danger, marginTop: spacing.sm },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
 });

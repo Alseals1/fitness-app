@@ -7,7 +7,7 @@ import { useAuth } from '../hooks/useAuth';
 import { usePreferences } from '../hooks/usePreferences';
 import { copy } from '../lib/copy';
 import { shouldOpenOnboarding } from '../lib/onboarding';
-import { colors, fontSize, spacing } from '../lib/theme';
+import { colors, spacing, typography } from '../lib/theme';
 
 // Onboarding opens by itself at most once per app launch, so backing out of it never loops.
 let promptedThisLaunch = false;
@@ -77,13 +77,12 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     backgroundColor: colors.background,
   },
-  title: { fontSize: fontSize.heading, fontWeight: '700', marginBottom: spacing.sm, color: colors.text },
-  subtitle: { fontSize: fontSize.body, textAlign: 'center', color: colors.mutedText },
+  title: { ...typography.heading, marginBottom: spacing.sm, color: colors.text },
+  subtitle: { ...typography.body, textAlign: 'center', color: colors.mutedText },
   link: {
     marginTop: spacing.xl,
-    fontSize: fontSize.body,
+    ...typography.bodyStrong,
     color: colors.primary,
-    fontWeight: '600',
     padding: spacing.sm,
   },
   account: { marginTop: spacing.xl, alignItems: 'center', gap: spacing.md },

@@ -1,7 +1,9 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { useFocusState } from '../hooks/useFocusState';
+import { chipColors, colorStyle, focusRing } from '../lib/controlStyles';
 import type { Option } from '../lib/placeOptions';
-import { colors, fontSize, radius, spacing } from '../lib/theme';
+import { borderWidth, minTouchTarget, radius, spacing, typography } from '../lib/theme';
 
 type Props<T extends string> = {
   options: readonly Option<T>[];
@@ -24,38 +26,63 @@ export function OptionChips<T extends string>({
 }: Props<T>) {
   return (
     <View style={styles.row} accessibilityLabel={accessibilityLabel} accessibilityRole={multiple ? undefined : 'radiogroup'}>
-      {options.map((option) => {
-        const isSelected = selected.includes(option.value);
-        return (
-          <Pressable
-            key={option.value}
-            onPress={() => onToggle(option.value)}
-            disabled={disabled}
-            accessibilityRole={multiple ? 'checkbox' : 'radio'}
-            accessibilityState={multiple ? { checked: isSelected, disabled } : { selected: isSelected, disabled }}
-            style={[styles.chip, isSelected && styles.chipSelected]}
-          >
-            <Text style={[styles.label, isSelected && styles.labelSelected]}>{option.label}</Text>
-          </Pressable>
-        );
-      })}
+      {options.map((option) => (
+        <Chip
+          key={option.value}
+          label={option.label}
+          selected={selected.includes(option.value)}
+          disabled={disabled}
+          multiple={multiple}
+          onPress={() => onToggle(option.value)}
+        />
+      ))}
     </View>
+  );
+}
+
+type ChipProps = { label: string; selected: boolean; disabled: boolean; multiple: boolean; onPress: () => void };
+
+/** One chip. Its own component so each chip tracks its own focus. */
+function Chip({ label, selected, disabled, multiple, onPress }: ChipProps) {
+  const { focused, onFocus, onBlur } = useFocusState();
+  return (
+    <Pressable
+      onPress={onPress}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      disabled={disabled}
+      accessibilityRole={multiple ? 'checkbox' : 'radio'}
+      accessibilityState={multiple ? { checked: selected, disabled } : { selected, disabled }}
+      style={({ pressed }) => [
+        styles.chip,
+        colorStyle(chipColors({ pressed, focused, disabled, selected })),
+        focusRing(focused),
+      ]}
+    >
+      {({ pressed }) => (
+        <Text
+          style={[
+            selected ? styles.labelSelected : styles.label,
+            { color: chipColors({ pressed, focused, disabled, selected }).text },
+          ]}
+        >
+          {label}
+        </Text>
+      )}
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   chip: {
-    minHeight: 36,
+    minHeight: minTouchTarget,
     justifyContent: 'center',
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.xs,
-    borderRadius: radius * 2,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
+    borderRadius: radius.full,
+    borderWidth: borderWidth.thin,
   },
-  chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
-  label: { fontSize: fontSize.small, color: colors.text },
-  labelSelected: { color: colors.primaryText, fontWeight: '600' },
+  label: typography.body,
+  labelSelected: typography.bodyStrong,
 });

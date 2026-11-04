@@ -1,10 +1,13 @@
 import { Link } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { useFocusState } from '../hooks/useFocusState';
 import { copy } from '../lib/copy';
+import { focusRing } from '../lib/controlStyles';
 import type { RankedPlace } from '../lib/matching';
 import { resultCardAccessibilityLabel, resultCardMeta } from '../lib/results';
-import { colors, fontSize, radius, spacing } from '../lib/theme';
+import { borderWidth, colors, radius, shadow, spacing, typography } from '../lib/theme';
 import { SaveButton } from './SaveButton';
 
 type Props = { result: RankedPlace; saved: boolean; onToggleSave: (id: string) => void };
@@ -16,6 +19,11 @@ type Props = { result: RankedPlace; saved: boolean; onToggleSave: (id: string) =
  */
 export function ResultCard({ result, saved, onToggleSave }: Props) {
   const { place, reasons } = result;
+  const { focused, onFocus, onBlur } = useFocusState();
+  // Link asChild merges the child's style as an object, so a style function would be dropped
+  // (losing flex: 1 and the pressed and focus styles). Track pressed here and pass a flat style.
+  const [pressed, setPressed] = useState(false);
+  const linkStyle = StyleSheet.flatten([styles.link, pressed && styles.linkPressed, focusRing(focused)]);
   return (
     <View style={styles.card}>
       <Link href={{ pathname: '/place/[id]', params: { id: place.id } }} asChild>
@@ -23,7 +31,11 @@ export function ResultCard({ result, saved, onToggleSave }: Props) {
           accessibilityRole="link"
           accessibilityLabel={resultCardAccessibilityLabel(result)}
           accessibilityHint={copy.results.openHint}
-          style={({ pressed }) => [styles.link, pressed && styles.dimmed]}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          onPressIn={() => setPressed(true)}
+          onPressOut={() => setPressed(false)}
+          style={linkStyle}
         >
           <Text style={styles.name}>{place.name}</Text>
           <Text style={styles.meta}>{resultCardMeta(result)}</Text>
@@ -47,23 +59,26 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: spacing.sm,
+    gap: spacing.md,
     backgroundColor: colors.surface,
-    borderRadius: radius,
-    borderWidth: 1,
+    borderRadius: radius.lg,
+    borderCurve: 'continuous',
+    borderWidth: borderWidth.thin,
     borderColor: colors.border,
+    boxShadow: shadow.card,
     padding: spacing.lg,
   },
-  link: { flex: 1, gap: spacing.xs },
-  dimmed: { opacity: 0.6 },
-  name: { fontSize: fontSize.title, fontWeight: '700', color: colors.text },
-  meta: { fontSize: fontSize.body, color: colors.mutedText },
+  // The padding keeps the pressed fill and focus ring off the text; the negative margin keeps the text aligned.
+  link: { flex: 1, gap: spacing.xs, padding: spacing.xs, margin: -spacing.xs, borderRadius: radius.md, borderCurve: 'continuous' },
+  linkPressed: { backgroundColor: colors.surfaceMuted },
+  name: { ...typography.title, color: colors.text },
+  meta: { ...typography.body, color: colors.mutedText },
   reasons: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: spacing.sm },
   chip: {
     backgroundColor: colors.reasonBackground,
-    borderRadius: radius * 2,
+    borderRadius: radius.full,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
   },
-  chipText: { fontSize: fontSize.small, fontWeight: '600', color: colors.reasonText },
+  chipText: { ...typography.label, color: colors.reasonText },
 });

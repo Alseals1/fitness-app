@@ -10,7 +10,7 @@ import { copy } from '../lib/copy';
 import { fetchApprovedPlaces } from '../lib/places';
 import { resultsView, type PlacesLoad } from '../lib/results';
 import { supabase } from '../lib/supabase';
-import { colors, fontSize, spacing } from '../lib/theme';
+import { colors, spacing, typography } from '../lib/theme';
 
 /** Approved places, best fit first. Open to everyone: no account needed. */
 export default function ResultsScreen() {
@@ -119,8 +119,8 @@ const styles = StyleSheet.create({
   list: { padding: spacing.lg, gap: spacing.md },
   header: { gap: spacing.xs },
   notice: { gap: spacing.xs },
-  noticeText: { fontSize: fontSize.body, color: colors.text },
-  link: { fontSize: fontSize.body, fontWeight: '600', color: colors.primary, paddingVertical: spacing.sm },
-  error: { fontSize: fontSize.body, color: colors.danger, textAlign: 'center' },
-  muted: { fontSize: fontSize.body, color: colors.mutedText, textAlign: 'center', marginTop: spacing.md },
+  noticeText: { ...typography.body, color: colors.text },
+  link: { ...typography.bodyStrong, color: colors.primary, paddingVertical: spacing.sm },
+  error: { ...typography.body, color: colors.danger, textAlign: 'center' },
+  muted: { ...typography.body, color: colors.mutedText, textAlign: 'center', marginTop: spacing.md },
 });

@@ -10,7 +10,7 @@ import { copy } from '../../lib/copy';
 import { placeProfileView, type ContactLink, type PlaceLoad, type PlaceProfile } from '../../lib/placeProfile';
 import { fetchApprovedPlace, type PlaceResult } from '../../lib/places';
 import { supabase } from '../../lib/supabase';
-import { colors, fontSize, radius, spacing } from '../../lib/theme';
+import { borderWidth, colors, fontWeight, minTouchTarget, opacity, radius, spacing, typography } from '../../lib/theme';
 
 function toLoad(result: PlaceResult): PlaceLoad {
   return result.ok ? { status: 'loaded', place: result.place } : { status: 'error', message: result.message };
@@ -196,31 +196,32 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   centered: { alignItems: 'center', justifyContent: 'center', padding: spacing.xl, gap: spacing.md },
   content: { padding: spacing.lg, gap: spacing.lg },
-  heading: { fontSize: fontSize.heading, fontWeight: '700', color: colors.text },
-  title: { fontSize: fontSize.title, fontWeight: '700', color: colors.text, textAlign: 'center' },
-  meta: { fontSize: fontSize.body, color: colors.mutedText },
-  certified: { fontSize: fontSize.body, fontWeight: '600', color: colors.success },
+  heading: { ...typography.heading, color: colors.text },
+  title: { ...typography.title, color: colors.text, textAlign: 'center' },
+  meta: { ...typography.body, color: colors.mutedText },
+  certified: { ...typography.bodyStrong, color: colors.success },
   save: { alignItems: 'flex-start', gap: spacing.xs },
   section: { gap: spacing.xs },
-  sectionLabel: { fontSize: fontSize.small, fontWeight: '700', color: colors.mutedText },
-  body: { fontSize: fontSize.body, color: colors.text },
+  sectionLabel: { ...typography.label, fontWeight: fontWeight.bold, color: colors.mutedText },
+  body: { ...typography.body, color: colors.text },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   chip: {
     backgroundColor: colors.reasonBackground,
-    borderRadius: radius * 2,
+    borderRadius: radius.full,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
   },
-  chipText: { fontSize: fontSize.small, fontWeight: '600', color: colors.reasonText },
+  chipText: { ...typography.label, color: colors.reasonText },
   note: {
     backgroundColor: colors.surface,
-    borderRadius: radius,
-    borderWidth: 1,
+    borderRadius: radius.lg,
+    borderCurve: 'continuous',
+    borderWidth: borderWidth.thin,
     borderColor: colors.border,
     padding: spacing.md,
   },
-  contactRow: { minHeight: 44, justifyContent: 'center' },
-  link: { fontSize: fontSize.body, fontWeight: '600', color: colors.primary, paddingVertical: spacing.sm },
-  dimmed: { opacity: 0.6 },
-  error: { fontSize: fontSize.body, color: colors.danger, textAlign: 'center' },
+  contactRow: { minHeight: minTouchTarget, justifyContent: 'center' },
+  link: { ...typography.bodyStrong, color: colors.primary, paddingVertical: spacing.sm },
+  dimmed: { opacity: opacity.pressed },
+  error: { ...typography.body, color: colors.danger, textAlign: 'center' },
 });
