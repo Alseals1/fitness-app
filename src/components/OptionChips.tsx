@@ -1,7 +1,11 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { useFocusState } from '../hooks/useFocusState';
+import { useMotion } from '../hooks/useMotion';
+import { pressTransition } from '../lib/animations';
 import { chipColors, colorStyle, focusRing } from '../lib/controlStyles';
+import { pressScale } from '../lib/motion';
 import type { Option } from '../lib/placeOptions';
 import { borderWidth, minTouchTarget, radius, spacing, typography } from '../lib/theme';
 
@@ -42,9 +46,10 @@ export function OptionChips<T extends string>({
 
 type ChipProps = { label: string; selected: boolean; disabled: boolean; multiple: boolean; onPress: () => void };
 
-/** One chip. Its own component so each chip tracks its own focus. */
+/** One chip. Its own component so each chip tracks its own focus. Press feedback works as in `Button`. */
 function Chip({ label, selected, disabled, multiple, onPress }: ChipProps) {
   const { focused, onFocus, onBlur } = useFocusState();
+  const { reduced } = useMotion();
   return (
     <Pressable
       onPress={onPress}
@@ -53,28 +58,30 @@ function Chip({ label, selected, disabled, multiple, onPress }: ChipProps) {
       disabled={disabled}
       accessibilityRole={multiple ? 'checkbox' : 'radio'}
       accessibilityState={multiple ? { checked: selected, disabled } : { selected, disabled }}
-      style={({ pressed }) => [
-        styles.chip,
-        colorStyle(chipColors({ pressed, focused, disabled, selected })),
-        focusRing(focused),
-      ]}
+      style={[styles.pressable, focusRing(focused)]}
     >
-      {({ pressed }) => (
-        <Text
-          style={[
-            selected ? styles.labelSelected : styles.label,
-            { color: chipColors({ pressed, focused, disabled, selected }).text },
-          ]}
-        >
-          {label}
-        </Text>
-      )}
+      {({ pressed }) => {
+        const controlColors = chipColors({ pressed, focused, disabled, selected });
+        return (
+          <Animated.View
+            style={[
+              styles.chip,
+              colorStyle(controlColors),
+              pressTransition,
+              { transform: [{ scale: pressScale('control', pressed, reduced) }] },
+            ]}
+          >
+            <Text style={[selected ? styles.labelSelected : styles.label, { color: controlColors.text }]}>{label}</Text>
+          </Animated.View>
+        );
+      }}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  pressable: { minHeight: minTouchTarget, borderRadius: radius.full },
   chip: {
     minHeight: minTouchTarget,
     justifyContent: 'center',
