@@ -15,7 +15,7 @@ import {
   toggleAnswer,
 } from '../lib/onboarding';
 import { emptyPreferences, loadPreferences, savePreferences, type Preferences } from '../lib/preferences';
-import { colors, fontSize, spacing } from '../lib/theme';
+import { colors, spacing, typography } from '../lib/theme';
 
 /** Five skippable questions. The answers stay on this device; nothing is sent anywhere. */
 export default function OnboardingScreen() {
@@ -123,9 +123,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   centered: { alignItems: 'center', justifyContent: 'center' },
   content: { padding: spacing.xl, gap: spacing.md },
-  progress: { fontSize: fontSize.small, color: colors.mutedText },
-  title: { fontSize: fontSize.title, fontWeight: '700', color: colors.text },
-  hint: { fontSize: fontSize.small, color: colors.mutedText },
-  error: { color: colors.danger, fontSize: fontSize.small, marginVertical: spacing.xs },
+  progress: { ...typography.caption, color: colors.mutedText },
+  title: { ...typography.title, color: colors.text },
+  hint: { ...typography.caption, color: colors.mutedText },
+  error: { ...typography.caption, color: colors.danger, marginVertical: spacing.xs },
   actions: { marginTop: spacing.lg, gap: spacing.sm },
 });

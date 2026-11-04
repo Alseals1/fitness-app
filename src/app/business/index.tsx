@@ -4,7 +4,7 @@ import { ScrollView, StyleSheet, Text } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
 import { businessHomeLinks } from '../../lib/businessHome';
 import { copy } from '../../lib/copy';
-import { colors, fontSize, spacing } from '../../lib/theme';
+import { colors, spacing, typography } from '../../lib/theme';
 
 export default function BusinessHomeScreen() {
   const { session, loading } = useAuth();
@@ -31,7 +31,7 @@ export default function BusinessHomeScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   container: { padding: spacing.xl, gap: spacing.md },
-  intro: { fontSize: fontSize.body, color: colors.text },
-  hint: { fontSize: fontSize.body, color: colors.mutedText },
-  link: { fontSize: fontSize.body, color: colors.primary, fontWeight: '600', paddingVertical: spacing.sm },
+  intro: { ...typography.body, color: colors.text },
+  hint: { ...typography.body, color: colors.mutedText },
+  link: { ...typography.bodyStrong, color: colors.primary, paddingVertical: spacing.sm },
 });

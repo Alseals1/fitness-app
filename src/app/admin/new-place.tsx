@@ -15,7 +15,7 @@ import {
   type PlaceFormValues,
 } from '../../lib/placeForm';
 import { supabase } from '../../lib/supabase';
-import { colors, fontSize, spacing } from '../../lib/theme';
+import { colors, spacing, typography } from '../../lib/theme';
 
 export default function NewPlaceScreen() {
   const [values, setValues] = useState<PlaceFormValues>(emptyPlaceForm);
@@ -92,5 +92,5 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.background },
   form: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xl * 2 },
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
-  switchLabel: { fontSize: fontSize.body, color: colors.text, flexShrink: 1 },
+  switchLabel: { ...typography.body, color: colors.text, flexShrink: 1 },
 });

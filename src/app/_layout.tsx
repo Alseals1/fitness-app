@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 
 import { AuthProvider, useAuth } from '../hooks/useAuth';
 import { copy } from '../lib/copy';
+import { stackScreenOptions } from '../lib/stackScreenOptions';
 
 function RootNavigator() {
   const { session, isAdmin } = useAuth();
@@ -10,7 +11,7 @@ function RootNavigator() {
   // The guards are a convenience: RLS and the admin_* functions are the real protection.
   // When a guard is false, Expo Router sends the user to the anchor route (index).
   return (
-    <Stack>
+    <Stack screenOptions={stackScreenOptions}>
       <Stack.Screen name="index" options={{ title: copy.appName }} />
       {/* Open to everyone: onboarding is optional and needs no account. */}
       <Stack.Screen name="onboarding" options={{ title: copy.onboarding.title }} />

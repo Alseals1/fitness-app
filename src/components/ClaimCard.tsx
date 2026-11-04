@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { showsCertifyControl, type Submission } from '../lib/admin';
 import { copy } from '../lib/copy';
 import { CATEGORY_LABELS } from '../lib/placeOptions';
-import { colors, fontSize, radius, spacing } from '../lib/theme';
+import { borderWidth, colors, radius, spacing, typography } from '../lib/theme';
 import { Button } from './Button';
 import { CertifyControl } from './CertifyControl';
 import { RejectReasonBox } from './RejectReasonBox';
@@ -67,15 +67,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
     borderCurve: 'continuous',
-    borderWidth: 1,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border,
     padding: spacing.lg,
     gap: spacing.xs,
   },
-  name: { fontSize: fontSize.title, fontWeight: '700', color: colors.text },
-  meta: { fontSize: fontSize.body, color: colors.mutedText },
-  small: { fontSize: fontSize.small, color: colors.mutedText },
-  warning: { fontSize: fontSize.small, fontWeight: '600', color: colors.danger },
-  error: { fontSize: fontSize.small, color: colors.danger, marginTop: spacing.sm },
+  name: { ...typography.title, color: colors.text },
+  meta: { ...typography.body, color: colors.mutedText },
+  small: { ...typography.caption, color: colors.mutedText },
+  warning: { ...typography.label, color: colors.danger },
+  error: { ...typography.caption, color: colors.danger, marginTop: spacing.sm },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
 });

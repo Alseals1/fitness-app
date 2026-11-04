@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { toSubmissionDetails, type Submission } from '../lib/admin';
 import { copy } from '../lib/copy';
-import { colors, fontSize, radius, spacing } from '../lib/theme';
+import { borderWidth, colors, fontWeight, radius, spacing, typography } from '../lib/theme';
 
 /**
  * What a business sent with its listing or claim. Untrusted input: shown as plain, selectable
@@ -31,11 +31,11 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     borderRadius: radius.lg,
     borderCurve: 'continuous',
-    borderWidth: 1,
+    borderWidth: borderWidth.thin,
     borderColor: colors.border,
     backgroundColor: colors.background,
   },
-  title: { fontSize: fontSize.small, fontWeight: '700', color: colors.text },
-  row: { fontSize: fontSize.small, color: colors.text },
-  label: { fontWeight: '600', color: colors.mutedText },
+  title: { ...typography.label, fontWeight: fontWeight.bold, color: colors.text },
+  row: { ...typography.caption, color: colors.text },
+  label: { fontWeight: fontWeight.semibold, color: colors.mutedText },
 });

@@ -104,6 +104,8 @@ export const typography = {
   title: { fontFamily, fontSize: 20, lineHeight: 26, fontWeight: fontWeight.bold },
   heading: { fontFamily, fontSize: 28, lineHeight: 34, fontWeight: fontWeight.bold },
   display: { fontFamily, fontSize: 34, lineHeight: 40, fontWeight: fontWeight.bold },
+  /** Text inside a `TextInput`. No line height: on iOS it pushes single-line input text off centre. */
+  input: { fontFamily, fontSize: 16, fontWeight: fontWeight.regular },
 } as const satisfies Record<string, TextStyle>;
 
 export const borderWidth = {

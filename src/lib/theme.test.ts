@@ -29,9 +29,10 @@ describe('theme', () => {
     }
   });
 
-  it('gives every type style a line height taller than its size', () => {
-    for (const style of Object.values(typography)) {
-      expect(style.lineHeight).toBeGreaterThan(style.fontSize);
+  it('gives every type style but input a line height taller than its size', () => {
+    for (const [name, style] of Object.entries(typography)) {
+      if (name === 'input') continue;
+      expect('lineHeight' in style && style.lineHeight).toBeGreaterThan(style.fontSize);
     }
   });
 });

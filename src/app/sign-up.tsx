@@ -6,7 +6,7 @@ import { Button } from '../components/Button';
 import { useAuth } from '../hooks/useAuth';
 import { EMAIL_MAX, PASSWORD_MAX, signUpErrorMessage, signUpOutcome, validateSignUp } from '../lib/auth';
 import { copy } from '../lib/copy';
-import { colors, fontSize, radius, spacing } from '../lib/theme';
+import { borderWidth, colors, minTouchTarget, radius, spacing, typography } from '../lib/theme';
 
 export default function SignUpScreen() {
   const { signUp } = useAuth();
@@ -114,20 +114,20 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background, padding: spacing.xl },
   form: { gap: spacing.sm },
-  body: { fontSize: fontSize.body, color: colors.text },
-  label: { fontSize: fontSize.small, color: colors.mutedText, marginTop: spacing.sm },
-  hint: { fontSize: fontSize.small, color: colors.mutedText },
+  body: { ...typography.body, color: colors.text },
+  label: { ...typography.caption, color: colors.mutedText, marginTop: spacing.sm },
+  hint: { ...typography.caption, color: colors.mutedText },
   input: {
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: borderWidth.thin,
+    borderColor: colors.borderStrong,
     borderRadius: radius.md,
     borderCurve: 'continuous',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    fontSize: fontSize.body,
+    ...typography.input,
     color: colors.text,
-    minHeight: 44,
+    minHeight: minTouchTarget,
   },
-  error: { color: colors.danger, fontSize: fontSize.small, marginVertical: spacing.xs },
-  link: { fontSize: fontSize.body, color: colors.primary, fontWeight: '600', paddingVertical: spacing.sm },
+  error: { ...typography.caption, color: colors.danger, marginVertical: spacing.xs },
+  link: { ...typography.bodyStrong, color: colors.primary, paddingVertical: spacing.sm },
 });

@@ -3,7 +3,7 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { CERTIFICATION_NAME_MAX } from '../lib/admin';
 import { copy } from '../lib/copy';
-import { colors, fontSize, radius, spacing } from '../lib/theme';
+import { borderWidth, colors, minTouchTarget, radius, spacing, typography } from '../lib/theme';
 import { Button } from './Button';
 
 type Props = {
@@ -52,17 +52,17 @@ export function CertifyControl({ certificationName, suggestedName, onCertify, on
 
 const styles = StyleSheet.create({
   box: { marginTop: spacing.md, gap: spacing.sm, alignItems: 'flex-start' },
-  certified: { fontSize: fontSize.small, fontWeight: '600', color: colors.success },
+  certified: { ...typography.label, color: colors.success },
   input: {
     alignSelf: 'stretch',
-    minHeight: 44,
-    borderWidth: 1,
-    borderColor: colors.border,
+    minHeight: minTouchTarget,
+    borderWidth: borderWidth.thin,
+    borderColor: colors.borderStrong,
     borderRadius: radius.md,
     borderCurve: 'continuous',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    fontSize: fontSize.body,
+    ...typography.input,
     color: colors.text,
     backgroundColor: colors.background,
   },

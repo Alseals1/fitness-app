@@ -3,7 +3,7 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { REJECTION_REASON_MAX } from '../lib/admin';
 import { copy } from '../lib/copy';
-import { colors, fontSize, radius, spacing } from '../lib/theme';
+import { borderWidth, colors, minTouchTarget, radius, spacing, typography } from '../lib/theme';
 import { Button } from './Button';
 
 type Props = {
@@ -42,18 +42,19 @@ export function RejectReasonBox({ onReject, onCancel, busy }: Props) {
 const styles = StyleSheet.create({
   box: { marginTop: spacing.md, gap: spacing.xs },
   input: {
-    minHeight: 80,
-    borderWidth: 1,
-    borderColor: colors.border,
+    // Two touch targets tall: room for about three lines before it scrolls.
+    minHeight: minTouchTarget * 2,
+    borderWidth: borderWidth.thin,
+    borderColor: colors.borderStrong,
     borderRadius: radius.md,
     borderCurve: 'continuous',
     padding: spacing.md,
-    fontSize: fontSize.body,
+    ...typography.input,
     color: colors.text,
     backgroundColor: colors.background,
     textAlignVertical: 'top',
   },
-  count: { fontSize: fontSize.small, color: colors.mutedText },
+  count: { ...typography.caption, color: colors.mutedText },
   over: { color: colors.danger },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
 });
