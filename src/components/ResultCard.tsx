@@ -1,4 +1,5 @@
 import { Link } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useFocusState } from '../hooks/useFocusState';
@@ -19,6 +20,10 @@ type Props = { result: RankedPlace; saved: boolean; onToggleSave: (id: string) =
 export function ResultCard({ result, saved, onToggleSave }: Props) {
   const { place, reasons } = result;
   const { focused, onFocus, onBlur } = useFocusState();
+  // Link asChild merges the child's style as an object, so a style function would be dropped
+  // (losing flex: 1 and the pressed and focus styles). Track pressed here and pass a flat style.
+  const [pressed, setPressed] = useState(false);
+  const linkStyle = StyleSheet.flatten([styles.link, pressed && styles.linkPressed, focusRing(focused)]);
   return (
     <View style={styles.card}>
       <Link href={{ pathname: '/place/[id]', params: { id: place.id } }} asChild>
@@ -28,7 +33,9 @@ export function ResultCard({ result, saved, onToggleSave }: Props) {
           accessibilityHint={copy.results.openHint}
           onFocus={onFocus}
           onBlur={onBlur}
-          style={({ pressed }) => [styles.link, pressed && styles.linkPressed, focusRing(focused)]}
+          onPressIn={() => setPressed(true)}
+          onPressOut={() => setPressed(false)}
+          style={linkStyle}
         >
           <Text style={styles.name}>{place.name}</Text>
           <Text style={styles.meta}>{resultCardMeta(result)}</Text>
@@ -61,7 +68,8 @@ const styles = StyleSheet.create({
     boxShadow: shadow.card,
     padding: spacing.lg,
   },
-  link: { flex: 1, gap: spacing.xs, borderRadius: radius.md, borderCurve: 'continuous' },
+  // The padding keeps the pressed fill and focus ring off the text; the negative margin keeps the text aligned.
+  link: { flex: 1, gap: spacing.xs, padding: spacing.xs, margin: -spacing.xs, borderRadius: radius.md, borderCurve: 'continuous' },
   linkPressed: { backgroundColor: colors.surfaceMuted },
   name: { ...typography.title, color: colors.text },
   meta: { ...typography.body, color: colors.mutedText },
