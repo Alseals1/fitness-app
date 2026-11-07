@@ -5,17 +5,25 @@ import { ActivityIndicator, RefreshControl, SectionList, StyleSheet, Text, View 
 import { Button } from '../../components/Button';
 import { ClaimCard } from '../../components/ClaimCard';
 import { PendingPlaceCard } from '../../components/PendingPlaceCard';
+import { ReportedPlaceCard } from '../../components/ReportedPlaceCard';
 import { useAuth } from '../../hooks/useAuth';
 import {
+  ADMIN_REPORTS_LIMIT,
   applyClaimAction,
   applyClaimCertified,
   applyQueueAction,
+  applyReportResolved,
   approveClaim,
   approvePlace,
+  dismissReports,
+  fetchOpenReports,
   fetchPendingPlaces,
   fetchPendingSubmissions,
+  groupReports,
   hidePlace,
+  hideReportedPlace,
   isQueueAtLimit,
+  queueItemKey,
   queueSections,
   rejectClaim,
   rejectPlace,
@@ -23,6 +31,7 @@ import {
   setPlaceVerified,
   splitSubmissions,
   type AdminResult,
+  type ReportedPlace,
   type Submission,
 } from '../../lib/admin';
 import { copy } from '../../lib/copy';
@@ -35,6 +44,8 @@ export default function AdminQueueScreen() {
   const [places, setPlaces] = useState<PublicPlace[]>([]);
   const [submissions, setSubmissions] = useState<Record<string, Submission>>({});
   const [claims, setClaims] = useState<Submission[]>([]);
+  const [reported, setReported] = useState<ReportedPlace[]>([]);
+  const [reportsAtLimit, setReportsAtLimit] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -42,19 +53,23 @@ export default function AdminQueueScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
-    const [placesResult, submissionsResult] = await Promise.all([
+    const [placesResult, submissionsResult, reportsResult] = await Promise.all([
       fetchPendingPlaces(supabase),
       fetchPendingSubmissions(supabase),
+      fetchOpenReports(supabase),
     ]);
-    if (placesResult.ok && submissionsResult.ok) {
+    if (placesResult.ok && submissionsResult.ok && reportsResult.ok) {
       const split = splitSubmissions(submissionsResult.data);
       setPlaces(placesResult.data);
       setSubmissions(split.byPlaceId);
       setClaims(split.claims);
+      setReported(groupReports(reportsResult.data));
+      setReportsAtLimit(isQueueAtLimit(reportsResult.data, ADMIN_REPORTS_LIMIT));
       setLoadError(null);
       setErrors({});
     } else {
-      setLoadError(!placesResult.ok ? placesResult.message : !submissionsResult.ok ? submissionsResult.message : null);
+      const failed = [placesResult, submissionsResult, reportsResult].find((result) => !result.ok);
+      setLoadError(failed && !failed.ok ? failed.message : null);
     }
     setLoaded(true);
   }, []);
@@ -93,7 +108,7 @@ export default function AdminQueueScreen() {
     });
   }
 
-  const sections = useMemo(() => queueSections(places, claims), [places, claims]);
+  const sections = useMemo(() => queueSections(places, claims, reported), [places, claims, reported]);
 
   return (
     <View style={styles.container}>
@@ -107,7 +122,7 @@ export default function AdminQueueScreen() {
       ) : (
         <SectionList
           sections={sections}
-          keyExtractor={(item) => (item.kind === 'claim' ? `claim-${item.claim.id}` : `place-${item.place.id}`)}
+          keyExtractor={queueItemKey}
           contentContainerStyle={styles.list}
           stickySectionHeadersEnabled={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
@@ -123,9 +138,16 @@ export default function AdminQueueScreen() {
                   </Text>
                   <Button label={copy.queue.retry} variant="secondary" onPress={onRefresh} />
                 </>
-              ) : isQueueAtLimit(places) || isQueueAtLimit(claims) ? (
-                <Text style={styles.muted}>{copy.queue.limitReached}</Text>
-              ) : null}
+              ) : (
+                <>
+                  {reportsAtLimit ? (
+                    <Text style={styles.muted}>{copy.queue.reportsLimitReached(ADMIN_REPORTS_LIMIT)}</Text>
+                  ) : null}
+                  {isQueueAtLimit(places) || isQueueAtLimit(claims) ? (
+                    <Text style={styles.muted}>{copy.queue.limitReached}</Text>
+                  ) : null}
+                </>
+              )}
             </View>
           }
           ListEmptyComponent={loadError ? undefined : <Text style={styles.muted}>{copy.queue.empty}</Text>}
@@ -136,6 +158,20 @@ export default function AdminQueueScreen() {
           )}
           ItemSeparatorComponent={Separator}
           renderItem={({ item }) => {
+            if (item.kind === 'reports') {
+              const { placeId } = item.reported;
+              const cardId = `report-${placeId}`;
+              const resolved = () => setReported((current) => applyReportResolved(current, placeId));
+              return (
+                <ReportedPlaceCard
+                  reported={item.reported}
+                  busy={busyId === cardId}
+                  error={errors[cardId] ?? null}
+                  onHide={() => act(cardId, () => hideReportedPlace(supabase, placeId), resolved)}
+                  onDismiss={() => act(cardId, () => dismissReports(supabase, placeId), resolved)}
+                />
+              );
+            }
             if (item.kind === 'claim') {
               const claim = item.claim;
               return (
