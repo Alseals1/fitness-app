@@ -18,8 +18,8 @@ export type Shortlist = {
   /** True only for the first load, so the screen does not flicker on later ones. */
   loading: boolean;
   isSaved: (id: string) => boolean;
-  /** Saves or removes a place. Ignored until the first load is done. */
-  toggle: (id: string) => void;
+  /** Saves or removes a place. Ignored until the first load is done: returns false when it was. */
+  toggle: (id: string) => boolean;
   /** Set when the last change could not be saved; the list is then back to what is stored. */
   saveError: string | null;
 };
@@ -64,7 +64,7 @@ export function useShortlist(): Shortlist {
   const toggle = useCallback(
     (id: string) => {
       // Before the first load the screen does not know what is saved, so a tap could undo it.
-      if (loadingRef.current) return;
+      if (loadingRef.current) return false;
       // Decide from what the button shows, then apply that to the stored list in the chain.
       const save = !isSavedIn(idsRef.current, id);
       apply(save ? addId(idsRef.current, id) : removeId(idsRef.current, id));
@@ -83,6 +83,7 @@ export function useShortlist(): Shortlist {
           // Put the list back to what is stored.
           settle(await loadShortlist(deviceStorage));
         });
+      return true;
     },
     [apply],
   );

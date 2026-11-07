@@ -4,9 +4,11 @@ import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } f
 
 import { Button } from '../components/Button';
 import { ResultCard } from '../components/ResultCard';
+import { useMotion } from '../hooks/useMotion';
 import { usePreferences } from '../hooks/usePreferences';
 import { useShortlist } from '../hooks/useShortlist';
 import { copy } from '../lib/copy';
+import { entranceFor } from '../lib/motion';
 import { fetchApprovedPlaces } from '../lib/places';
 import { resultsView, type PlacesLoad } from '../lib/results';
 import { supabase } from '../lib/supabase';
@@ -18,6 +20,10 @@ export default function ResultsScreen() {
   const shortlist = useShortlist();
   const [places, setPlaces] = useState<PlacesLoad>({ status: 'loading' });
   const [refreshing, setRefreshing] = useState(false);
+  const { reduced } = useMotion();
+  // Only the cards on the list's first paint animate in. Rows that mount later (scrolling,
+  // a refresh) appear at once, so a virtualized list never replays the entrance.
+  const [entered, setEntered] = useState(false);
 
   // A reload keeps the current list on screen until the new one arrives.
   const load = useCallback(async () => {
@@ -75,6 +81,7 @@ export default function ResultsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         // The cards read their saved state from the shortlist, so a toggle must repaint them.
         extraData={shortlist.ids}
+        onLayout={() => setEntered(true)}
         ListHeaderComponent={
           <View style={styles.header}>
             {view.hasPreferences ? (
@@ -100,11 +107,12 @@ export default function ResultsScreen() {
           </View>
         }
         ListEmptyComponent={<Text style={styles.muted}>{copy.results.empty}</Text>}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <ResultCard
             result={item}
             saved={shortlist.isSaved(item.place.id)}
             onToggleSave={shortlist.toggle}
+            entrance={entranceFor({ index, reduced, animate: !entered })}
           />
         )}
       />
