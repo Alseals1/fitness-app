@@ -1,11 +1,14 @@
 import * as Linking from 'expo-linking';
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { Button } from '../../components/Button';
 import { SaveButton } from '../../components/SaveButton';
+import { PlaceProfileSkeleton } from '../../components/Skeleton';
 import { useShortlist } from '../../hooks/useShortlist';
+import { profileEntering } from '../../lib/animations';
 import { copy } from '../../lib/copy';
 import { placeProfileView, type ContactLink, type PlaceLoad, type PlaceProfile } from '../../lib/placeProfile';
 import { fetchApprovedPlace, type PlaceResult } from '../../lib/places';
@@ -46,7 +49,7 @@ export default function PlaceScreen() {
   if (view.kind === 'loading') {
     return (
       <View style={styles.container}>
-        <ActivityIndicator style={styles.fill} color={colors.primary} />
+        <PlaceProfileSkeleton />
       </View>
     );
   }
@@ -90,7 +93,7 @@ function Profile({ profile }: { profile: PlaceProfile }) {
   }, []);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <Animated.ScrollView entering={profileEntering} style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.heading} accessibilityRole="header">
         {profile.name}
       </Text>
@@ -154,7 +157,7 @@ function Profile({ profile }: { profile: PlaceProfile }) {
           ) : null}
         </Section>
       ) : null}
-    </ScrollView>
+    </Animated.ScrollView>
   );
 }
 
@@ -193,7 +196,6 @@ function ContactRow({ contact, onOpen }: { contact: ContactLink; onOpen: (url: s
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  fill: { flex: 1 },
   centered: { alignItems: 'center', justifyContent: 'center', padding: spacing.xl, gap: spacing.md },
   content: { padding: spacing.lg, gap: spacing.lg },
   heading: { ...typography.heading, color: colors.text },

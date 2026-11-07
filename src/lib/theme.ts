@@ -157,6 +157,17 @@ export const motion = {
 /** The smallest touch target, in points, for anything tappable. */
 export const minTouchTarget = 44;
 
+/** A card's surface. Result cards and their skeletons share it, so a skeleton matches what replaces it. */
+export const cardStyle: ViewStyle = {
+  backgroundColor: colors.surface,
+  borderRadius: radius.lg,
+  borderCurve: 'continuous',
+  borderWidth: borderWidth.thin,
+  borderColor: colors.border,
+  boxShadow: shadow.card,
+  padding: spacing.lg,
+};
+
 /** The keyboard and switch focus ring: drawn as an outline, so it never changes text contrast. */
 export const focusRingStyle: ViewStyle = {
   outlineColor: colors.focusRing,

@@ -1,9 +1,10 @@
 import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '../components/Button';
 import { ResultCard } from '../components/ResultCard';
+import { ResultListSkeleton } from '../components/Skeleton';
 import { useMotion } from '../hooks/useMotion';
 import { usePreferences } from '../hooks/usePreferences';
 import { useShortlist } from '../hooks/useShortlist';
@@ -56,7 +57,7 @@ export default function ResultsScreen() {
   if (view.kind === 'loading') {
     return (
       <View style={styles.container}>
-        <ActivityIndicator style={styles.fill} color={colors.primary} />
+        <ResultListSkeleton />
       </View>
     );
   }
@@ -122,7 +123,6 @@ export default function ResultsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  fill: { flex: 1 },
   centered: { alignItems: 'center', justifyContent: 'center', padding: spacing.xl, gap: spacing.md },
   list: { padding: spacing.lg, gap: spacing.md },
   header: { gap: spacing.xs },

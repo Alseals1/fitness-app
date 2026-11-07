@@ -11,7 +11,7 @@ import { focusRing } from '../lib/controlStyles';
 import type { RankedPlace } from '../lib/matching';
 import { pressScale, type Entrance } from '../lib/motion';
 import { resultCardAccessibilityLabel, resultCardMeta } from '../lib/results';
-import { borderWidth, colors, radius, shadow, spacing, typography } from '../lib/theme';
+import { cardStyle, colors, radius, spacing, typography } from '../lib/theme';
 import { SaveButton } from './SaveButton';
 
 type Props = {
@@ -75,18 +75,7 @@ export function ResultCard({ result, saved, onToggleSave, entrance }: Props) {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderCurve: 'continuous',
-    borderWidth: borderWidth.thin,
-    borderColor: colors.border,
-    boxShadow: shadow.card,
-    padding: spacing.lg,
-  },
+  card: { ...cardStyle, flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
   // The padding keeps the pressed fill and focus ring off the text; the negative margin keeps the text aligned.
   link: { flex: 1, gap: spacing.xs, padding: spacing.xs, margin: -spacing.xs, borderRadius: radius.md, borderCurve: 'continuous' },
   linkPressed: { backgroundColor: colors.surfaceMuted },
