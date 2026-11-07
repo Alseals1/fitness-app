@@ -1,18 +1,25 @@
 import {
   ADMIN_MESSAGES,
   ADMIN_QUEUE_LIMIT,
+  ADMIN_REPORTS_LIMIT,
   adminErrorMessage,
   applyClaimAction,
   applyClaimCertified,
   applyQueueAction,
+  applyReportResolved,
   approveClaim,
   approvePlace,
   CERTIFICATION_NAME_MAX,
   createPlace,
+  dismissReports,
+  fetchOpenReports,
   fetchPendingPlaces,
   fetchPendingSubmissions,
+  groupReports,
   hidePlace,
+  hideReportedPlace,
   isQueueAtLimit,
+  queueItemKey,
   queueSections,
   rejectClaim,
   rejectPlace,
@@ -23,7 +30,10 @@ import {
   toSubmissionDetails,
   validateCertificationName,
   validateRejectionReason,
+  visibleNotes,
   type AdminClient,
+  type Report,
+  type ReportedPlace,
   type Submission,
 } from './admin';
 import { copy } from './copy';
@@ -493,5 +503,177 @@ describe('queueSections', () => {
     expect(queueSections([place], []).map((s) => s.key)).toEqual(['places']);
     expect(queueSections([], [claim]).map((s) => s.key)).toEqual(['claims']);
     expect(queueSections([], [])).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Reports
+// ---------------------------------------------------------------------------
+
+function makeReport(overrides: Partial<Report> = {}): Report {
+  return {
+    id: 'r1',
+    place_id: 'pA',
+    place_name: 'Reported Gym (sample)',
+    place_category: 'gym',
+    place_status: 'approved',
+    reason: 'closed',
+    note: null,
+    created_at: '2026-11-01T10:00:00Z',
+    ...overrides,
+  };
+}
+
+function makeReported(overrides: Partial<ReportedPlace> = {}): ReportedPlace {
+  return {
+    placeId: 'pA',
+    placeName: 'Reported Gym (sample)',
+    placeCategory: 'gym',
+    placeStatus: 'approved',
+    count: 1,
+    reasonCounts: { closed: 1 },
+    notes: [],
+    latestAt: '2026-11-01T10:00:00Z',
+    ...overrides,
+  };
+}
+
+describe('fetchOpenReports', () => {
+  it('calls admin_list_reports and returns the rows', async () => {
+    const rows = [makeReport()];
+    const { client, calls } = fakeClient({ data: rows, error: null });
+    await expect(fetchOpenReports(client)).resolves.toEqual({ ok: true, data: rows });
+    expect(calls).toEqual([{ method: 'rpc', args: ['admin_list_reports'] }]);
+    expect(ADMIN_REPORTS_LIMIT).toBe(200);
+  });
+
+  it('maps no access', async () => {
+    const { client } = fakeClient({ data: null, error: { code: '42501', message: 'admin only' } });
+    await expect(fetchOpenReports(client)).resolves.toEqual({ ok: false, message: ADMIN_MESSAGES.noAccess });
+  });
+
+  it('returns an empty list for no data', async () => {
+    const { client } = fakeClient({ data: null, error: null });
+    await expect(fetchOpenReports(client)).resolves.toEqual({ ok: true, data: [] });
+  });
+});
+
+describe('dismissReports and hideReportedPlace', () => {
+  it('dismiss resolves the reports without hiding the place', async () => {
+    const { client, calls } = fakeClient({ data: null, error: null });
+    await expect(dismissReports(client, PLACE_ID)).resolves.toEqual({ ok: true, data: null });
+    expect(calls).toEqual([
+      { method: 'rpc', args: ['admin_resolve_reports', { p_place_id: PLACE_ID, p_hide_place: false }] },
+    ]);
+  });
+
+  it('hide resolves the reports and hides the place', async () => {
+    const { client, calls } = fakeClient({ data: null, error: null });
+    await expect(hideReportedPlace(client, PLACE_ID)).resolves.toEqual({ ok: true, data: null });
+    expect(calls).toEqual([
+      { method: 'rpc', args: ['admin_resolve_reports', { p_place_id: PLACE_ID, p_hide_place: true }] },
+    ]);
+  });
+
+  it('maps no access and a missing place', async () => {
+    const denied = fakeClient({ data: null, error: { code: '42501' } });
+    await expect(dismissReports(denied.client, PLACE_ID)).resolves.toEqual({ ok: false, message: ADMIN_MESSAGES.noAccess });
+    const gone = fakeClient({ data: null, error: { code: 'P0002' } });
+    await expect(hideReportedPlace(gone.client, PLACE_ID)).resolves.toEqual({ ok: false, message: ADMIN_MESSAGES.notFound });
+  });
+
+  it('returns a plain message when the call throws', async () => {
+    const { client } = fakeClient(() => Promise.reject(new Error('network down')));
+    await expect(dismissReports(client, PLACE_ID)).resolves.toEqual({ ok: false, message: ADMIN_MESSAGES.generic });
+  });
+});
+
+describe('groupReports', () => {
+  const reports: Report[] = [
+    makeReport({ id: 'b1', place_id: 'pB', place_name: 'B (sample)', reason: 'spam', created_at: '2026-11-05T10:00:00Z' }),
+    makeReport({ id: 'a1', place_id: 'pA', reason: 'closed', note: '  Shut in October ', created_at: '2026-11-03T10:00:00Z' }),
+    makeReport({ id: 'a2', place_id: 'pA', reason: 'wrong_details', note: 'Wrong phone', created_at: '2026-11-04T10:00:00Z' }),
+    makeReport({ id: 'a3', place_id: 'pA', reason: 'closed', note: '   ', created_at: '2026-11-02T10:00:00Z' }),
+    makeReport({ id: 'c1', place_id: 'pC', place_name: 'C (sample)', reason: 'other', note: 'Not a gym', created_at: '2026-11-06T10:00:00Z' }),
+  ];
+
+  it('groups by place with a count, per-reason counts and the newest time', () => {
+    const groups = groupReports(reports);
+    const a = groups.find((group) => group.placeId === 'pA');
+    expect(a).toEqual({
+      placeId: 'pA',
+      placeName: 'Reported Gym (sample)',
+      placeCategory: 'gym',
+      placeStatus: 'approved',
+      count: 3,
+      reasonCounts: { closed: 2, wrong_details: 1 },
+      notes: [
+        { text: 'Wrong phone', createdAt: '2026-11-04T10:00:00Z' },
+        { text: 'Shut in October', createdAt: '2026-11-03T10:00:00Z' },
+      ],
+      latestAt: '2026-11-04T10:00:00Z',
+    });
+  });
+
+  it('sorts by count, then by the most recent report', () => {
+    expect(groupReports(reports).map((group) => group.placeId)).toEqual(['pA', 'pC', 'pB']);
+  });
+
+  it('gives no groups for no reports', () => {
+    expect(groupReports([])).toEqual([]);
+  });
+});
+
+describe('visibleNotes', () => {
+  const notes = Array.from({ length: 7 }, (_, index) => ({ text: `Note ${index}`, createdAt: '2026-11-01T10:00:00Z' }));
+
+  it('shows the first 5 and counts the rest', () => {
+    const { notes: shown, more } = visibleNotes(makeReported({ notes }));
+    expect(shown.map((note) => note.text)).toEqual(['Note 0', 'Note 1', 'Note 2', 'Note 3', 'Note 4']);
+    expect(more).toBe(2);
+  });
+
+  it('shows all when there are few, and takes a custom cap', () => {
+    expect(visibleNotes(makeReported({ notes: notes.slice(0, 2) }))).toEqual({ notes: notes.slice(0, 2), more: 0 });
+    expect(visibleNotes(makeReported({ notes }), 3).more).toBe(4);
+  });
+});
+
+describe('applyReportResolved', () => {
+  it('removes only the resolved place', () => {
+    const groups = [makeReported({ placeId: 'pA' }), makeReported({ placeId: 'pB' })];
+    expect(applyReportResolved(groups, 'pA').map((group) => group.placeId)).toEqual(['pB']);
+  });
+});
+
+describe('queueSections with reports', () => {
+  const place = { id: 'p9' } as PublicPlace;
+  const claim = makeSubmission();
+  const reported = makeReported();
+
+  it('puts reported places first, then claims, then pending listings', () => {
+    expect(queueSections([place], [claim], [reported])).toEqual([
+      { key: 'reports', title: copy.queue.reports, data: [{ kind: 'reports', reported }] },
+      { key: 'claims', title: copy.queue.claims, data: [{ kind: 'claim', claim }] },
+      { key: 'places', title: copy.queue.pendingListings, data: [{ kind: 'place', place }] },
+    ]);
+  });
+
+  it('leaves out the reports section when there are none', () => {
+    expect(queueSections([place], [claim], []).map((section) => section.key)).toEqual(['claims', 'places']);
+    expect(queueSections([], [], [reported]).map((section) => section.key)).toEqual(['reports']);
+  });
+
+  it('gives each row kind its own key', () => {
+    expect(queueItemKey({ kind: 'reports', reported })).toBe('report-pA');
+    expect(queueItemKey({ kind: 'claim', claim })).toBe(`claim-${claim.id}`);
+    expect(queueItemKey({ kind: 'place', place })).toBe('place-p9');
+  });
+});
+
+describe('isQueueAtLimit for reports', () => {
+  it('takes a custom limit', () => {
+    expect(isQueueAtLimit(new Array(ADMIN_REPORTS_LIMIT - 1).fill(0), ADMIN_REPORTS_LIMIT)).toBe(false);
+    expect(isQueueAtLimit(new Array(ADMIN_REPORTS_LIMIT).fill(0), ADMIN_REPORTS_LIMIT)).toBe(true);
   });
 });
