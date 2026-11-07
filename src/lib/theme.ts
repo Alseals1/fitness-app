@@ -159,6 +159,22 @@ export const motion = {
 /** The smallest touch target, in points, for anything tappable. */
 export const minTouchTarget = 44;
 
+/**
+ * A plain text link in a screen (for example "See your shortlist"). The vertical padding makes
+ * its line at least `minTouchTarget` tall, so it meets the 44pt target without looking like a button.
+ */
+export const textLinkStyle: TextStyle = {
+  ...typography.bodyStrong,
+  color: colors.primary,
+  paddingVertical: (minTouchTarget - typography.bodyStrong.lineHeight) / 2,
+};
+
+/**
+ * At or above this system font scale, a result card puts its Save button under its text instead
+ * of beside it, so large text wraps across the full card width instead of being squeezed.
+ */
+export const stackedCardFontScale = 1.3;
+
 /** Fixed sizes of a few shared shapes, in points. */
 export const size = {
   /** The minimum height of a large chip (onboarding answers). */
@@ -203,6 +219,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   { fg: 'reasonText', bg: 'reasonBackground', min: 4.5 },
   { fg: 'disabledText', bg: 'disabledBackground', min: 4.5 },
   { fg: 'primary', bg: 'primarySoft', min: 4.5 },
+  { fg: 'text', bg: 'primarySoft', min: 4.5 },
   { fg: 'borderStrong', bg: 'background', min: 3 },
   { fg: 'borderStrong', bg: 'surface', min: 3 },
   { fg: 'focusRing', bg: 'background', min: 3 },

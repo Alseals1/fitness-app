@@ -1,3 +1,5 @@
+import type { Enums } from './database.types';
+
 /** UI text used on more than one screen. */
 export const copy = {
   appName: 'Fitness App',
@@ -144,6 +146,24 @@ export const copy = {
     empty: 'Nothing here yet. Check back soon.',
     loadFailed: "Couldn't load places. Check your connection and try again.",
     retry: 'Try again',
+    /** Above the cards: how many places, and whether they are ranked by fit. */
+    summary: (count: number, bestFirst: boolean) =>
+      `${count} ${count === 1 ? 'place' : 'places'}${bestFirst ? ', best fit first' : ''}`,
+    /** The price on a result card, after the part of town. "Free" stays one word. */
+    priceShort: {
+      free: 'Free',
+      budget: 'Budget price',
+      moderate: 'Moderate price',
+      premium: 'Premium price',
+    } satisfies Record<Enums<'price_range'>, string>,
+    /** The visible cue at the bottom of a result card: the whole card opens the profile. */
+    seeDetails: 'See details',
+    /** Decorative arrow after "See details". Hidden from screen readers. */
+    seeDetailsGlyph: '›',
+    emptyTitle: 'No places yet',
+    emptyBody:
+      'Every place is checked by a person before it shows up here, so the list is still growing. Check back soon.',
+    refresh: 'Refresh',
     /** Screen-reader hint on a result card. */
     openHint: 'Opens the place profile',
     /** Read out before the reason tags, for screen readers. */
