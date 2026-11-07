@@ -5,13 +5,17 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { Button } from '../../components/Button';
+import { ReportForm } from '../../components/ReportForm';
 import { SaveButton } from '../../components/SaveButton';
 import { PlaceProfileSkeleton } from '../../components/Skeleton';
 import { useShortlist } from '../../hooks/useShortlist';
 import { profileEntering } from '../../lib/animations';
 import { copy } from '../../lib/copy';
+import { getDeviceId } from '../../lib/deviceId';
+import { deviceStorage } from '../../lib/deviceStorage';
 import { placeProfileView, type ContactLink, type PlaceLoad, type PlaceProfile } from '../../lib/placeProfile';
 import { fetchApprovedPlace, type PlaceResult } from '../../lib/places';
+import { reportOutcome, submitReport, type ReportInput } from '../../lib/reports';
 import { supabase } from '../../lib/supabase';
 import { borderWidth, colors, fontWeight, minTouchTarget, opacity, radius, spacing, typography } from '../../lib/theme';
 
@@ -82,9 +86,24 @@ export default function PlaceScreen() {
   return <Profile profile={view.profile} />;
 }
 
+/** The report area: a link, the open form, or the message after sending. */
+type ReportState = 'closed' | 'open' | 'sent' | 'alreadyReported';
+
 function Profile({ profile }: { profile: PlaceProfile }) {
   const [openError, setOpenError] = useState<string | null>(null);
+  const [report, setReport] = useState<ReportState>('closed');
   const { loading: shortlistLoading, isSaved, toggle, saveError } = useShortlist();
+
+  const sendReport = useCallback(
+    async (input: ReportInput) => {
+      const deviceId = await getDeviceId(deviceStorage);
+      const result = await submitReport(supabase, profile.id, deviceId, input);
+      const outcome = reportOutcome(result);
+      if (outcome !== 'failed') setReport(outcome);
+      return result;
+    },
+    [profile.id],
+  );
 
   const open = useCallback((url: string) => {
     setOpenError(null);
@@ -157,6 +176,24 @@ function Profile({ profile }: { profile: PlaceProfile }) {
           ) : null}
         </Section>
       ) : null}
+
+      <View style={styles.report}>
+        {report === 'closed' ? (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setReport('open')}
+            style={({ pressed }) => [styles.reportLink, pressed && styles.dimmed]}
+          >
+            <Text style={styles.reportLinkText}>{copy.report.action}</Text>
+          </Pressable>
+        ) : null}
+        {report === 'open' ? <ReportForm onSubmit={sendReport} onCancel={() => setReport('closed')} /> : null}
+        {report === 'sent' || report === 'alreadyReported' ? (
+          <Text style={styles.body} accessibilityLiveRegion="polite">
+            {report === 'sent' ? copy.report.thanks : copy.report.alreadyReported}
+          </Text>
+        ) : null}
+      </View>
     </Animated.ScrollView>
   );
 }
@@ -226,4 +263,12 @@ const styles = StyleSheet.create({
   link: { ...typography.bodyStrong, color: colors.primary, paddingVertical: spacing.sm },
   dimmed: { opacity: opacity.pressed },
   error: { ...typography.body, color: colors.danger, textAlign: 'center' },
+  report: {
+    borderTopWidth: borderWidth.thin,
+    borderTopColor: colors.border,
+    paddingTop: spacing.md,
+    alignItems: 'stretch',
+  },
+  reportLink: { minHeight: minTouchTarget, justifyContent: 'center', alignSelf: 'flex-start' },
+  reportLinkText: { ...typography.body, color: colors.mutedText, textDecorationLine: 'underline' },
 });
