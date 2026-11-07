@@ -7,7 +7,7 @@ import { pressTransition } from '../lib/animations';
 import { chipColors, colorStyle, focusRing } from '../lib/controlStyles';
 import { pressScale } from '../lib/motion';
 import type { Option } from '../lib/placeOptions';
-import { borderWidth, minTouchTarget, radius, spacing, typography } from '../lib/theme';
+import { borderWidth, minTouchTarget, radius, size as shapeSize, spacing, typography } from '../lib/theme';
 
 type Props<T extends string> = {
   options: readonly Option<T>[];
@@ -17,6 +17,8 @@ type Props<T extends string> = {
   disabled?: boolean;
   accessibilityLabel: string;
   multiple?: boolean;
+  /** `large`: taller chips with more room, for onboarding answers. Defaults to `regular`. */
+  size?: 'regular' | 'large';
 };
 
 /** A row of chips for picking one value (category, area, price) or several (tags). */
@@ -27,9 +29,10 @@ export function OptionChips<T extends string>({
   disabled = false,
   accessibilityLabel,
   multiple = false,
+  size = 'regular',
 }: Props<T>) {
   return (
-    <View style={styles.row} accessibilityLabel={accessibilityLabel} accessibilityRole={multiple ? undefined : 'radiogroup'}>
+    <View style={[styles.row, size === 'large' && styles.rowLarge]} accessibilityLabel={accessibilityLabel} accessibilityRole={multiple ? undefined : 'radiogroup'}>
       {options.map((option) => (
         <Chip
           key={option.value}
@@ -37,6 +40,7 @@ export function OptionChips<T extends string>({
           selected={selected.includes(option.value)}
           disabled={disabled}
           multiple={multiple}
+          large={size === 'large'}
           onPress={() => onToggle(option.value)}
         />
       ))}
@@ -44,10 +48,17 @@ export function OptionChips<T extends string>({
   );
 }
 
-type ChipProps = { label: string; selected: boolean; disabled: boolean; multiple: boolean; onPress: () => void };
+type ChipProps = {
+  label: string;
+  selected: boolean;
+  disabled: boolean;
+  multiple: boolean;
+  large: boolean;
+  onPress: () => void;
+};
 
 /** One chip. Its own component so each chip tracks its own focus. Press feedback works as in `Button`. */
-function Chip({ label, selected, disabled, multiple, onPress }: ChipProps) {
+function Chip({ label, selected, disabled, multiple, large, onPress }: ChipProps) {
   const { focused, onFocus, onBlur } = useFocusState();
   const { reduced } = useMotion();
   return (
@@ -58,7 +69,7 @@ function Chip({ label, selected, disabled, multiple, onPress }: ChipProps) {
       disabled={disabled}
       accessibilityRole={multiple ? 'checkbox' : 'radio'}
       accessibilityState={multiple ? { checked: selected, disabled } : { selected, disabled }}
-      style={[styles.pressable, focusRing(focused)]}
+      style={[styles.pressable, large && styles.pressableLarge, focusRing(focused)]}
     >
       {({ pressed }) => {
         const controlColors = chipColors({ pressed, focused, disabled, selected });
@@ -66,6 +77,7 @@ function Chip({ label, selected, disabled, multiple, onPress }: ChipProps) {
           <Animated.View
             style={[
               styles.chip,
+              large && styles.chipLarge,
               colorStyle(controlColors),
               pressTransition,
               { transform: [{ scale: pressScale('control', pressed, reduced) }] },
@@ -92,4 +104,11 @@ const styles = StyleSheet.create({
   },
   label: typography.body,
   labelSelected: typography.bodyStrong,
+  rowLarge: { gap: spacing.md },
+  pressableLarge: { minHeight: shapeSize.chipLarge },
+  chipLarge: {
+    minHeight: shapeSize.chipLarge,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.sm,
+  },
 });
