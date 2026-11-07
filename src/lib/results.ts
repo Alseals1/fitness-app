@@ -3,6 +3,7 @@ import { rankPlaces, type RankedPlace } from './matching';
 import { AREA_LABELS, CATEGORY_LABELS, PRICE_LABELS } from './placeOptions';
 import type { PublicPlace } from './places';
 import { isEmptyPreferences, type Preferences } from './preferences';
+import { stackedCardFontScale, stackedCardMaxWidth } from './theme';
 
 /** The results screen's place data. Pure module: the screen owns the state, this decides what to show. */
 export type PlacesLoad =
@@ -45,4 +46,26 @@ export function resultCardAccessibilityLabel(result: RankedPlace): string {
     parts.push(`${copy.results.reasonsLabel}: ${result.reasons.map((reason) => reason.label).join(', ')}`);
   }
   return parts.join('. ');
+}
+
+/** The visible text of a result card above its name and under it: the category, then "<part of town> · <price>". */
+export function resultCardText(result: RankedPlace): { category: string; facts: string } {
+  const { place } = result;
+  return {
+    category: CATEGORY_LABELS[place.category],
+    facts: [AREA_LABELS[place.area], copy.results.priceShort[place.price_range]].join(' · '),
+  };
+}
+
+/** The line above the cards, for example "12 places, best fit first". Ranked by fit only with preferences. */
+export function resultsSummary(count: number, hasPreferences: boolean): string {
+  return copy.results.summary(count, hasPreferences);
+}
+
+/**
+ * Whether a result card puts Save beside its text (`row`) or under it (`stacked`): stacked for
+ * large system text, or for a window narrower than the reflow width (for example a zoomed browser).
+ */
+export function resultCardLayout(fontScale: number, windowWidth: number): 'row' | 'stacked' {
+  return fontScale >= stackedCardFontScale || windowWidth < stackedCardMaxWidth ? 'stacked' : 'row';
 }

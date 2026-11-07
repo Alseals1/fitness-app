@@ -1,6 +1,14 @@
 import type { PublicPlace } from './places';
 import { emptyPreferences, type Preferences } from './preferences';
-import { resultCardAccessibilityLabel, resultCardMeta, resultsView, type PlacesLoad } from './results';
+import {
+  resultCardAccessibilityLabel,
+  resultCardLayout,
+  resultCardMeta,
+  resultCardText,
+  resultsSummary,
+  resultsView,
+  type PlacesLoad,
+} from './results';
 
 function makePlace(overrides: Partial<PublicPlace>): PublicPlace {
   return {
@@ -117,5 +125,48 @@ describe('resultCardAccessibilityLabel', () => {
   it('leaves out the reasons part when there are none', () => {
     const result = { place: makePlace({ name: 'A Gym (sample)' }), score: 0, reasons: [] };
     expect(resultCardAccessibilityLabel(result)).toBe('A Gym (sample). Gym · Downtown · Moderate');
+  });
+});
+
+describe('resultCardText', () => {
+  it('gives the category label and "area · price"', () => {
+    const result = { place: makePlace({ category: 'gym', area: 'downtown', price_range: 'moderate' }), score: 0, reasons: [] };
+    expect(resultCardText(result)).toEqual({ category: 'Gym', facts: 'Downtown · Moderate price' });
+  });
+
+  it('says just "Free" for a free place', () => {
+    const result = { place: makePlace({ category: 'run_club', area: 'southside', price_range: 'free' }), score: 0, reasons: [] };
+    expect(resultCardText(result)).toEqual({ category: 'Run club', facts: 'Southside · Free' });
+  });
+});
+
+describe('resultsSummary', () => {
+  it.each([
+    [1, false, '1 place'],
+    [2, false, '2 places'],
+    [2, true, '2 places, best fit first'],
+    [1, true, '1 place, best fit first'],
+    [0, false, '0 places'],
+  ])('%p places, preferences %p → %p', (count, hasPreferences, expected) => {
+    expect(resultsSummary(count, hasPreferences)).toBe(expected);
+  });
+});
+
+describe('resultCardLayout', () => {
+  it.each([
+    [1, 'row'],
+    [1.29, 'row'],
+    [1.3, 'stacked'],
+    [2, 'stacked'],
+  ])('font scale %p on a phone → %p', (fontScale, expected) => {
+    expect(resultCardLayout(fontScale, 390)).toBe(expected);
+  });
+
+  it.each([
+    [320, 'row'],
+    [319, 'stacked'],
+    [195, 'stacked'],
+  ])('window width %p at font scale 1 → %p', (windowWidth, expected) => {
+    expect(resultCardLayout(1, windowWidth)).toBe(expected);
   });
 });

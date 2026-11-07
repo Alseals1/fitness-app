@@ -50,11 +50,15 @@ export function ResultListSkeleton() {
       {Array.from({ length: skeletonCardCount }, (_, index) => (
         <View key={index} style={styles.card}>
           <View style={styles.cardText}>
+            <SkeletonBlock width="25%" height={typography.label.lineHeight} />
             <SkeletonBlock width="80%" height={typography.title.lineHeight} />
-            <SkeletonBlock width="55%" height={typography.body.lineHeight} />
+            <SkeletonBlock width="45%" height={typography.body.lineHeight} />
             <View style={styles.pills}>
               <SkeletonBlock width="30%" height={pillHeight} radius={radius.full} />
               <SkeletonBlock width="25%" height={pillHeight} radius={radius.full} />
+            </View>
+            <View style={styles.cue}>
+              <SkeletonBlock width="30%" height={typography.bodyStrong.lineHeight} />
             </View>
           </View>
           <SkeletonBlock width={minTouchTarget} height={minTouchTarget} radius={radius.md} />
@@ -89,6 +93,7 @@ const styles = StyleSheet.create({
   card: { ...cardStyle, flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
   cardText: { flex: 1, gap: spacing.xs },
   pills: { flexDirection: 'row', gap: spacing.xs, marginTop: spacing.sm },
+  cue: { marginTop: spacing.sm },
   profile: { padding: spacing.lg, gap: spacing.lg },
   section: { gap: spacing.xs },
 });
