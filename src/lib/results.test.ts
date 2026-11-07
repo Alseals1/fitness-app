@@ -158,7 +158,15 @@ describe('resultCardLayout', () => {
     [1.29, 'row'],
     [1.3, 'stacked'],
     [2, 'stacked'],
-  ])('font scale %p → %p', (fontScale, expected) => {
-    expect(resultCardLayout(fontScale)).toBe(expected);
+  ])('font scale %p on a phone → %p', (fontScale, expected) => {
+    expect(resultCardLayout(fontScale, 390)).toBe(expected);
+  });
+
+  it.each([
+    [320, 'row'],
+    [319, 'stacked'],
+    [195, 'stacked'],
+  ])('window width %p at font scale 1 → %p', (windowWidth, expected) => {
+    expect(resultCardLayout(1, windowWidth)).toBe(expected);
   });
 });

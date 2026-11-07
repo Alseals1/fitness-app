@@ -175,6 +175,12 @@ export const textLinkStyle: TextStyle = {
  */
 export const stackedCardFontScale = 1.3;
 
+/**
+ * Below this window width (the WCAG reflow width, in points), a result card also stacks. Browser
+ * zoom narrows the window instead of raising the font scale, so this covers zoomed web too.
+ */
+export const stackedCardMaxWidth = 320;
+
 /** Fixed sizes of a few shared shapes, in points. */
 export const size = {
   /** The minimum height of a large chip (onboarding answers). */

@@ -3,7 +3,7 @@ import { rankPlaces, type RankedPlace } from './matching';
 import { AREA_LABELS, CATEGORY_LABELS, PRICE_LABELS } from './placeOptions';
 import type { PublicPlace } from './places';
 import { isEmptyPreferences, type Preferences } from './preferences';
-import { stackedCardFontScale } from './theme';
+import { stackedCardFontScale, stackedCardMaxWidth } from './theme';
 
 /** The results screen's place data. Pure module: the screen owns the state, this decides what to show. */
 export type PlacesLoad =
@@ -62,7 +62,10 @@ export function resultsSummary(count: number, hasPreferences: boolean): string {
   return copy.results.summary(count, hasPreferences);
 }
 
-/** Whether a result card puts Save beside its text (`row`) or under it (`stacked`, for large system text). */
-export function resultCardLayout(fontScale: number): 'row' | 'stacked' {
-  return fontScale >= stackedCardFontScale ? 'stacked' : 'row';
+/**
+ * Whether a result card puts Save beside its text (`row`) or under it (`stacked`): stacked for
+ * large system text, or for a window narrower than the reflow width (for example a zoomed browser).
+ */
+export function resultCardLayout(fontScale: number, windowWidth: number): 'row' | 'stacked' {
+  return fontScale >= stackedCardFontScale || windowWidth < stackedCardMaxWidth ? 'stacked' : 'row';
 }
