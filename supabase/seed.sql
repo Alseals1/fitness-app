@@ -9,7 +9,11 @@
 -- something before noon, evenings something from 5pm, weekends something on Sat or Sun. A
 -- schedule that doesn't say (for example "By appointment, weekdays") gets no time tag.
 --
--- This runs as the database owner, so status and is_verified can be set directly here.
+-- Reports: 3 open problem reports on 2 approved places (one 'other' with a note), from fixed
+-- sample device ids, so the admin screen's "Reported places" section has something to show.
+--
+-- This runs as the database owner, so status and is_verified can be set directly here, and
+-- reports can be inserted without submit_place_report.
 
 insert into public.places (
   id,
@@ -197,4 +201,27 @@ insert into public.places (
     'hidden',
     false,
     '2026-09-01 10:00:00+00'
+  );
+
+insert into public.place_reports (place_id, device_id, reason, note, created_at) values
+  (
+    '5eed0000-0000-4000-8000-000000000002',
+    'de5eed00-0000-4000-8000-000000000001',
+    'wrong_details',
+    'The phone number goes to a different gym.',
+    '2026-11-01 15:00:00+00'
+  ),
+  (
+    '5eed0000-0000-4000-8000-000000000002',
+    'de5eed00-0000-4000-8000-000000000002',
+    'closed',
+    null,
+    '2026-11-02 09:30:00+00'
+  ),
+  (
+    '5eed0000-0000-4000-8000-000000000004',
+    'de5eed00-0000-4000-8000-000000000003',
+    'other',
+    'The listing says beginners welcome, but the class was advanced only.',
+    '2026-11-03 18:45:00+00'
   );

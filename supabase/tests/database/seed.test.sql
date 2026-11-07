@@ -4,7 +4,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(6);
+select plan(8);
 
 select cmp_ok(
   (select count(*)::int from public.places),
@@ -45,6 +45,19 @@ select cmp_ok(
   '>=',
   1,
   'at least one approved place has a time tag'
+);
+
+select cmp_ok(
+  (select count(*)::int from public.place_reports where resolved_at is null),
+  '>=',
+  1,
+  'the seed has at least one open report'
+);
+
+select is_empty(
+  $$select 1 from public.place_reports r join public.places p on p.id = r.place_id
+    where p.status <> 'approved'$$,
+  'every seeded report is on an approved place'
 );
 
 select * from finish();
