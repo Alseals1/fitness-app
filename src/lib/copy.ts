@@ -1,4 +1,5 @@
 import type { Enums } from './database.types';
+import type { ContactKind } from './placeProfile';
 
 /** UI text used on more than one screen. */
 export const copy = {
@@ -198,6 +199,16 @@ export const copy = {
     area: 'Part of town',
     tags: 'Good to know',
     contact: 'Get in touch',
+    glance: 'At a glance',
+    /** The small label above each contact row's value. */
+    contactKinds: { phone: 'Phone', email: 'Email', website: 'Website', instagram: 'Instagram' } satisfies Record<
+      ContactKind,
+      string
+    >,
+    /** The decorative glyph at the end of a contact row you can open. Hidden from screen readers. */
+    contactGlyph: '›',
+    /** The decorative glyph before the certified text. Hidden from screen readers. */
+    certifiedGlyph: '✓',
     /** Screen-reader labels for the contact rows. */
     contactLabels: {
       phone: (value: string) => `Call ${value}`,

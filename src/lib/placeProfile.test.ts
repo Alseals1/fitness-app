@@ -4,6 +4,7 @@ import {
   instagramLink,
   phoneLink,
   placeProfileView,
+  profileFacts,
   text,
   toPlaceProfile,
   websiteLink,
@@ -57,21 +58,30 @@ describe('toPlaceProfile', () => {
       schedule: 'Mon–Fri 6am and 6pm',
       tags: ['Yoga', 'Beginner friendly'],
       contacts: [
-        { kind: 'phone', text: '205-555-0101', url: 'tel:2055550101', accessibilityLabel: 'Call 205-555-0101' },
+        {
+          kind: 'phone',
+          kindLabel: 'Phone',
+          text: '205-555-0101',
+          url: 'tel:2055550101',
+          accessibilityLabel: 'Call 205-555-0101',
+        },
         {
           kind: 'email',
+          kindLabel: 'Email',
           text: 'hello@example.com',
           url: 'mailto:hello@example.com',
           accessibilityLabel: 'Email hello@example.com',
         },
         {
           kind: 'website',
+          kindLabel: 'Website',
           text: 'example.com/southside-yoga',
           url: 'https://example.com/southside-yoga/',
           accessibilityLabel: 'Open website example.com/southside-yoga',
         },
         {
           kind: 'instagram',
+          kindLabel: 'Instagram',
           text: '@southside.yoga',
           url: 'https://www.instagram.com/southside.yoga/',
           accessibilityLabel: 'Open Instagram @southside.yoga',
@@ -168,6 +178,7 @@ describe('phoneLink', () => {
   it('shows a value with too few digits as text only', () => {
     expect(phoneLink('call us')).toEqual({
       kind: 'phone',
+      kindLabel: 'Phone',
       text: 'call us',
       url: null,
       accessibilityLabel: 'Call call us',
@@ -253,5 +264,54 @@ describe('placeProfileView', () => {
   it('shows the profile of an approved place', () => {
     const place = makePlace();
     expect(placeProfileView({ status: 'loaded', place })).toEqual({ kind: 'profile', profile: toPlaceProfile(place) });
+  });
+});
+
+describe('profileFacts', () => {
+  it('lists part of town, price range and schedule, in that order', () => {
+    expect(profileFacts(toPlaceProfile(makePlace()))).toEqual([
+      { key: 'area', label: copy.place.area, value: 'Southside' },
+      { key: 'price', label: copy.place.price, value: 'Moderate' },
+      { key: 'schedule', label: copy.place.schedule, value: 'Mon–Fri 6am and 6pm' },
+    ]);
+  });
+
+  it('leaves out the schedule when there is none, and never shows an empty value', () => {
+    const facts = profileFacts(toPlaceProfile(makePlace({ schedule: '  ' })));
+    expect(facts.map((fact) => fact.key)).toEqual(['area', 'price']);
+    for (const fact of facts) expect(fact.value.trim()).not.toBe('');
+  });
+
+  it('always shows part of town and price range, even for a bare place', () => {
+    const bare = makePlace({
+      description: null,
+      schedule: null,
+      contact_phone: null,
+      contact_email: null,
+      website_url: null,
+      instagram_handle: null,
+      tags: [],
+      area: 'hoover',
+      price_range: 'free',
+    });
+    const facts = profileFacts(toPlaceProfile(bare));
+    expect(facts.map((fact) => fact.key)).toEqual(['area', 'price']);
+    expect(facts.every((fact) => fact.value.length > 0)).toBe(true);
+  });
+});
+
+describe('kindLabel', () => {
+  it.each([
+    [phoneLink, '205-555-0101', 'phone'],
+    [emailLink, 'hello@example.com', 'email'],
+    [websiteLink, 'https://example.com', 'website'],
+    [instagramLink, 'southside', 'instagram'],
+  ] as const)('labels a %#. contact with its kind', (build, raw, kind) => {
+    expect(build(raw)).toMatchObject({ kind, kindLabel: copy.place.contactKinds[kind] });
+  });
+
+  it('keeps the label on a value shown as plain text', () => {
+    expect(websiteLink('example.com')).toMatchObject({ url: null, kindLabel: copy.place.contactKinds.website });
+    expect(instagramLink('bad handle!')).toMatchObject({ url: null, kindLabel: copy.place.contactKinds.instagram });
   });
 });
