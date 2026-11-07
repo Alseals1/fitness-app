@@ -225,4 +225,20 @@ export const copy = {
     retry: 'Try again',
     saveFailed: "Couldn't update your shortlist. Try again.",
   },
+  /** Reporting a problem with a listing, on the place profile. No account needed. */
+  report: {
+    action: 'Report a problem with this listing',
+    title: 'Report a problem',
+    intro: 'A person checks every report. We never show it, or who sent it, on the listing.',
+    reasonLabel: "What's wrong?",
+    noteLabel: 'Note (optional)',
+    noteLabelRequired: 'Note (required for Other)',
+    noteHint: 'For example the new phone number, or when it closed. Please leave out personal details.',
+    noteCount: (length: number, max: number) => `${length}/${max}`,
+    send: 'Send report',
+    sending: 'Sending…',
+    cancel: 'Cancel',
+    thanks: 'Thanks. A person will check this listing.',
+    alreadyReported: "You've already reported this listing. Thanks, we're on it.",
+  },
 } as const;
