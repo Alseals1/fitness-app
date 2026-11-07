@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { copy } from './copy';
-import type { Database } from './database.types';
+import type { Database, Enums } from './database.types';
 import type { CreatePlaceArgs } from './placeForm';
 import { PUBLIC_PLACE_SELECT, type PublicPlace } from './places';
 
@@ -17,6 +17,9 @@ export type AdminResult<T> = { ok: true; data: T } | { ok: false; message: strin
 
 /** The queue shows at most this many pending places, newest first. */
 export const ADMIN_QUEUE_LIMIT = 100;
+
+/** admin_list_reports returns at most this many open reports, newest first. */
+export const ADMIN_REPORTS_LIMIT = 200;
 
 export const REJECTION_REASON_MAX = 500;
 
@@ -312,21 +315,146 @@ export function applyQueueAction(places: PublicPlace[], placeId: string, action:
   return places.filter((place) => place.id !== placeId);
 }
 
+// ---------------------------------------------------------------------------
+// Reports on listings
+// ---------------------------------------------------------------------------
+
+type ListedReport = Database['public']['Functions']['admin_list_reports']['Returns'][number];
+
+export type ReportReason = Enums<'report_reason'>;
+
+/**
+ * One open report, without the reporter's device id (the database never returns it).
+ * The type generator marks every returned column as non-null; the note can be null.
+ */
+export type Report = Omit<ListedReport, 'note'> & { note: string | null };
+
+/** Open reports, newest first, up to ADMIN_REPORTS_LIMIT. */
+export function fetchOpenReports(client: AdminClient): Promise<AdminResult<Report[]>> {
+  return run(
+    () => client.rpc('admin_list_reports'),
+    // Widening the generated non-null note to string | null is safe.
+    (data) => (data ?? []) as Report[],
+  );
+}
+
+/** Dismisses every open report on a place. The place does not change. */
+export function dismissReports(client: AdminClient, placeId: string): Promise<AdminResult<null>> {
+  return run(
+    () => client.rpc('admin_resolve_reports', { p_place_id: placeId, p_hide_place: false }),
+    () => null,
+  );
+}
+
+/** Hides a reported place and resolves its open reports, in one transaction. */
+export function hideReportedPlace(client: AdminClient, placeId: string): Promise<AdminResult<null>> {
+  return run(
+    () => client.rpc('admin_resolve_reports', { p_place_id: placeId, p_hide_place: true }),
+    () => null,
+  );
+}
+
+/** A report note for the admin. Untrusted input: shown as plain text, never a link. */
+export type ReportNote = { text: string; createdAt: string };
+
+/** The open reports on one place, for one card. */
+export type ReportedPlace = {
+  placeId: string;
+  placeName: string;
+  placeCategory: Enums<'place_category'>;
+  placeStatus: Enums<'place_status'>;
+  count: number;
+  reasonCounts: Partial<Record<ReportReason, number>>;
+  /** Newest first. Blank notes are left out. */
+  notes: ReportNote[];
+  /** When the newest report on the place arrived. */
+  latestAt: string;
+};
+
+function newer(a: string, b: string): number {
+  return Date.parse(b) - Date.parse(a);
+}
+
+/**
+ * Open reports grouped by place: the places with the most reports first, then the most
+ * recently reported. Notes are newest first.
+ */
+export function groupReports(reports: readonly Report[]): ReportedPlace[] {
+  const byPlace = new Map<string, ReportedPlace>();
+  for (const report of reports) {
+    let group = byPlace.get(report.place_id);
+    if (!group) {
+      group = {
+        placeId: report.place_id,
+        placeName: report.place_name,
+        placeCategory: report.place_category,
+        placeStatus: report.place_status,
+        count: 0,
+        reasonCounts: {},
+        notes: [],
+        latestAt: report.created_at,
+      };
+      byPlace.set(report.place_id, group);
+    }
+    group.count += 1;
+    group.reasonCounts[report.reason] = (group.reasonCounts[report.reason] ?? 0) + 1;
+    const text = report.note?.trim();
+    if (text) group.notes.push({ text, createdAt: report.created_at });
+    if (newer(group.latestAt, report.created_at) > 0) group.latestAt = report.created_at;
+  }
+  const groups = [...byPlace.values()];
+  for (const group of groups) group.notes.sort((a, b) => newer(a.createdAt, b.createdAt));
+  return groups.sort((a, b) => b.count - a.count || newer(a.latestAt, b.latestAt));
+}
+
+/** The notes a card shows at first, and how many more there are. */
+export function visibleNotes(place: ReportedPlace, max = 5): { notes: ReportNote[]; more: number } {
+  return { notes: place.notes.slice(0, max), more: Math.max(0, place.notes.length - max) };
+}
+
+/** The reported places after the admin hid one or dismissed its reports. */
+export function applyReportResolved(groups: ReportedPlace[], placeId: string): ReportedPlace[] {
+  return groups.filter((group) => group.placeId !== placeId);
+}
+
 /** One row of the admin queue. */
-export type QueueItem = { kind: 'claim'; claim: Submission } | { kind: 'place'; place: PublicPlace };
+export type QueueItem =
+  | { kind: 'reports'; reported: ReportedPlace }
+  | { kind: 'claim'; claim: Submission }
+  | { kind: 'place'; place: PublicPlace };
 
-export type QueueSection = { key: 'claims' | 'places'; title: string; data: QueueItem[] };
+export type QueueSection = { key: 'reports' | 'claims' | 'places'; title: string; data: QueueItem[] };
 
-/** The queue's sections: claims first, then pending listings. An empty section is left out. */
-export function queueSections(places: readonly PublicPlace[], claims: readonly Submission[]): QueueSection[] {
+/**
+ * The queue's sections: reported places first, then claims, then pending listings. An empty
+ * section is left out.
+ */
+export function queueSections(
+  places: readonly PublicPlace[],
+  claims: readonly Submission[],
+  reported: readonly ReportedPlace[] = [],
+): QueueSection[] {
   const sections: QueueSection[] = [
+    { key: 'reports', title: copy.queue.reports, data: reported.map((group) => ({ kind: 'reports', reported: group })) },
     { key: 'claims', title: copy.queue.claims, data: claims.map((claim) => ({ kind: 'claim', claim })) },
     { key: 'places', title: copy.queue.pendingListings, data: places.map((place) => ({ kind: 'place', place })) },
   ];
   return sections.filter((section) => section.data.length > 0);
 }
 
-/** True when the queue may hold more pending places than it shows. */
-export function isQueueAtLimit(places: readonly unknown[]): boolean {
-  return places.length >= ADMIN_QUEUE_LIMIT;
+/** A stable key for a queue row. */
+export function queueItemKey(item: QueueItem): string {
+  switch (item.kind) {
+    case 'reports':
+      return `report-${item.reported.placeId}`;
+    case 'claim':
+      return `claim-${item.claim.id}`;
+    case 'place':
+      return `place-${item.place.id}`;
+  }
+}
+
+/** True when a list may hold more rows than it shows. */
+export function isQueueAtLimit(rows: readonly unknown[], limit: number = ADMIN_QUEUE_LIMIT): boolean {
+  return rows.length >= limit;
 }
