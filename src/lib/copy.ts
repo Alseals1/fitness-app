@@ -143,7 +143,6 @@ export const copy = {
     title: 'Places for you',
     homeLink: 'See places that fit you',
     noPreferences: "Tell us what you like and we'll show the best fits first.",
-    empty: 'Nothing here yet. Check back soon.',
     loadFailed: "Couldn't load places. Check your connection and try again.",
     retry: 'Try again',
     /** Above the cards: how many places, and whether they are ranked by fit. */
