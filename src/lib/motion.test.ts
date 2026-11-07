@@ -1,4 +1,4 @@
-import { entranceFor, pressScale, saveFeedback, skeletonPulses, stackAnimation } from './motion';
+import { celebrationFor, entranceFor, pressScale, saveFeedback, skeletonPulses, stackAnimation } from './motion';
 import { motion } from './theme';
 
 describe('pressScale', () => {
@@ -110,5 +110,20 @@ describe('skeletonPulses', () => {
   it('pulses, and stays still under Reduced Motion', () => {
     expect(skeletonPulses(false)).toBe(true);
     expect(skeletonPulses(true)).toBe(false);
+  });
+});
+
+describe('celebrationFor', () => {
+  it.each([
+    [false, false, 'pop', motion.celebration.holdMs],
+    [true, false, 'fade', motion.celebration.holdMs],
+    [false, true, 'pop', null],
+    [true, true, 'fade', null],
+  ] as const)('reduced %s, screen reader %s: %s, closes after %s', (reduced, screenReader, entrance, autoCloseMs) => {
+    expect(celebrationFor({ reduced, screenReader })).toEqual({ entrance, autoCloseMs });
+  });
+
+  it('closes after 1.4 s when no screen reader runs', () => {
+    expect(celebrationFor({ reduced: false, screenReader: false }).autoCloseMs).toBe(1400);
   });
 });

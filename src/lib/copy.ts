@@ -128,7 +128,14 @@ export const copy = {
     skipRest: 'Skip the rest',
     saving: 'Saving…',
     saveFailed: "Couldn't save your answers. Try again.",
-    progress: (step: number, total: number) => `${step} of ${total}`,
+    progress: (step: number, total: number) => `Question ${step} of ${total}`,
+    /** Read out by screen readers after a step change. */
+    stepAnnouncement: (progress: string, title: string) => `${progress}. ${title}`,
+    finishedTitle: "You're all set",
+    finishedBody: "We'll show the places that fit you best first.",
+    continue: 'Continue',
+    /** The decorative glyph in the "done" badge. Hidden from screen readers. */
+    checkGlyph: '✓',
   },
   results: {
     title: 'Places for you',

@@ -78,9 +78,32 @@ export function primaryActionLabel(p: Preferences, stepIndex: number): string {
   return current && hasAnswer(p, current.key) ? copy.onboarding.next : copy.onboarding.skip;
 }
 
-/** For example "2 of 5". `stepIndex` counts from 0. */
+/** For example "Question 2 of 5". `stepIndex` counts from 0. */
 export function progressLabel(stepIndex: number): string {
   return copy.onboarding.progress(stepIndex + 1, ONBOARDING_STEPS.length);
+}
+
+/** The progress bar: one entry per question, true up to and including `stepIndex` (clamped to the range). */
+export function progressSegments(stepIndex: number): boolean[] {
+  const last = Math.min(Math.max(stepIndex, 0), ONBOARDING_STEPS.length - 1);
+  return ONBOARDING_STEPS.map((_, i) => i <= last);
+}
+
+/** What screen readers hear after a step change, for example "Question 2 of 5. How much experience do you have?". */
+export function stepAnnouncement(stepIndex: number): string {
+  const i = Math.min(Math.max(stepIndex, 0), ONBOARDING_STEPS.length - 1);
+  return copy.onboarding.stepAnnouncement(progressLabel(i), ONBOARDING_STEPS[i].title);
+}
+
+/** Which button saved the answers: "Done" on the last question, or "Skip the rest". */
+export type SaveTrigger = 'done' | 'skipRest';
+
+/**
+ * What happens after a successful save. Finishing every question earns the short "You're all set"
+ * moment; "Skip the rest" is the fast exit, so it leaves at once.
+ */
+export function afterSave(trigger: SaveTrigger): 'celebrate' | 'leave' {
+  return trigger === 'done' ? 'celebrate' : 'leave';
 }
 
 /**

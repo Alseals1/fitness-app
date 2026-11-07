@@ -1,5 +1,5 @@
 import { contrastRatio } from './contrast';
-import { colors, contrastPairs, minTouchTarget, motion, radius, shadow, typography } from './theme';
+import { colors, contrastPairs, minTouchTarget, motion, radius, shadow, size, typography } from './theme';
 
 describe('theme', () => {
   it.each(contrastPairs.map((p) => [p.fg, p.bg, p.min] as const))('%s on %s is at least %s:1', (fg, bg, min) => {
@@ -52,6 +52,23 @@ describe('theme', () => {
   it('keeps the save bloom small', () => {
     expect(motion.bloomScale).toBeGreaterThan(1);
     expect(motion.bloomScale).toBeLessThanOrEqual(1.1);
+  });
+
+  it('keeps large chips at least a touch target tall', () => {
+    expect(size.chipLarge).toBeGreaterThanOrEqual(minTouchTarget);
+  });
+
+  it('has only positive shape sizes', () => {
+    for (const value of Object.values(size)) {
+      expect(value).toBeGreaterThan(0);
+    }
+  });
+
+  it('keeps the onboarding celebration gentle and quick', () => {
+    expect(motion.celebration.fromScale).toBeGreaterThan(0.5);
+    expect(motion.celebration.fromScale).toBeLessThan(1);
+    expect(motion.celebration.holdMs).toBeGreaterThanOrEqual(800);
+    expect(motion.celebration.holdMs).toBeLessThanOrEqual(2000);
   });
 
   it('has a valid ease-out curve', () => {

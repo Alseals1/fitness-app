@@ -2,7 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
 /**
- * One light tap when a place is saved. Android uses `performAndroidHapticsAsync`, which needs no
+ * One light confirming tap: a place saved, or onboarding finished. Android uses `performAndroidHapticsAsync`, which needs no
  * VIBRATE permission (`app.json` blocks it). Web has none. A failure is ignored: the haptic is
  * never the only sign that something was saved.
  */
