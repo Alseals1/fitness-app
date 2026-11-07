@@ -6,7 +6,7 @@
 import { Easing, FadeIn, ReduceMotion, cubicBezier } from 'react-native-reanimated';
 import type { CSSAnimationProperties, CSSTransitionProperties } from 'react-native-reanimated';
 
-import type { Entrance } from './motion';
+import type { Celebration, Entrance } from './motion';
 import { motion } from './theme';
 
 /** The ease-out curve for CSS transitions and animations. */
@@ -58,6 +58,37 @@ export function entranceStyle(entrance: Entrance): CSSAnimationProperties | unde
         animationFillMode: 'backwards',
       };
   }
+}
+
+/** A progress bar segment easing its colour as it fills. A colour change, so it runs under Reduced Motion too. */
+export const progressFillTransition: CSSTransitionProperties = {
+  transitionProperty: 'backgroundColor',
+  transitionDuration: motion.duration.base,
+  transitionTimingFunction: cssEaseOut,
+};
+
+/**
+ * The onboarding "done" badge: a gentle pop (grows from `fromScale` and fades in, no overshoot), or
+ * only a fade under Reduced Motion. A CSS animation for the same web reason as `entranceStyle`.
+ */
+export function celebrationStyle(entrance: Celebration['entrance']): CSSAnimationProperties {
+  if (entrance === 'fade') {
+    return {
+      animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
+      animationDuration: motion.duration.fast,
+      animationTimingFunction: cssEaseOut,
+      animationFillMode: 'backwards',
+    };
+  }
+  return {
+    animationName: {
+      from: { opacity: 0, transform: [{ scale: motion.celebration.fromScale }] },
+      to: { opacity: 1, transform: [{ scale: 1 }] },
+    },
+    animationDuration: motion.duration.slow,
+    animationTimingFunction: cssEaseOut,
+    animationFillMode: 'backwards',
+  };
 }
 
 /** The skeleton pulse: opacity 1 ↔ `skeletonDimOpacity`, one beat per `pulse`, for as long as it shows. */

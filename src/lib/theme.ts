@@ -152,10 +152,22 @@ export const motion = {
   entrance: { offsetY: 8, stagger: 40, maxStaggered: 6 },
   /** The lowest opacity of the skeleton pulse. */
   skeletonDimOpacity: 0.5,
+  /** The onboarding "done" moment: the badge grows from `fromScale`; the screen closes after `holdMs`. */
+  celebration: { fromScale: 0.85, holdMs: 1400 },
 } as const;
 
 /** The smallest touch target, in points, for anything tappable. */
 export const minTouchTarget = 44;
+
+/** Fixed sizes of a few shared shapes, in points. */
+export const size = {
+  /** The minimum height of a large chip (onboarding answers). */
+  chipLarge: 56,
+  /** The height of one progress bar segment. */
+  progressTrack: 6,
+  /** The round badge of the onboarding "done" moment. */
+  celebrationBadge: 72,
+} as const;
 
 /** A card's surface. Result cards and their skeletons share it, so a skeleton matches what replaces it. */
 export const cardStyle: ViewStyle = {
@@ -190,6 +202,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   { fg: 'primaryText', bg: 'primaryPressed', min: 4.5 },
   { fg: 'reasonText', bg: 'reasonBackground', min: 4.5 },
   { fg: 'disabledText', bg: 'disabledBackground', min: 4.5 },
+  { fg: 'primary', bg: 'primarySoft', min: 4.5 },
   { fg: 'borderStrong', bg: 'background', min: 3 },
   { fg: 'borderStrong', bg: 'surface', min: 3 },
   { fg: 'focusRing', bg: 'background', min: 3 },

@@ -1,12 +1,15 @@
 import { copy } from './copy';
 import {
   ONBOARDING_STEPS,
+  afterSave,
   hasAnswer,
   isLastStep,
   primaryActionLabel,
   progressLabel,
+  progressSegments,
   selectedValues,
   shouldOpenOnboarding,
+  stepAnnouncement,
   toggleAnswer,
 } from './onboarding';
 import { AREA_OPTIONS, PRICE_OPTIONS } from './placeOptions';
@@ -106,14 +109,37 @@ describe('primaryActionLabel', () => {
 });
 
 describe('progress', () => {
-  it('counts from 1 of 5', () => {
-    expect(progressLabel(0)).toBe('1 of 5');
-    expect(progressLabel(4)).toBe('5 of 5');
+  it('counts from Question 1 of 5', () => {
+    expect(progressLabel(0)).toBe('Question 1 of 5');
+    expect(progressLabel(4)).toBe('Question 5 of 5');
+  });
+
+  it('fills the progress bar up to and including the current question', () => {
+    expect(progressSegments(0)).toEqual([true, false, false, false, false]);
+    expect(progressSegments(2)).toEqual([true, true, true, false, false]);
+    expect(progressSegments(4)).toEqual([true, true, true, true, true]);
+  });
+
+  it('clamps the progress bar to the range', () => {
+    expect(progressSegments(-1)).toEqual([true, false, false, false, false]);
+    expect(progressSegments(9)).toEqual([true, true, true, true, true]);
+  });
+
+  it('announces the question number and its title', () => {
+    expect(stepAnnouncement(1)).toBe('Question 2 of 5. How much experience do you have?');
+    expect(stepAnnouncement(4)).toBe(`Question 5 of 5. ${copy.onboarding.areas}`);
   });
 
   it('knows the last step', () => {
     expect(isLastStep(3)).toBe(false);
     expect(isLastStep(4)).toBe(true);
+  });
+});
+
+describe('afterSave', () => {
+  it('celebrates finishing, and leaves at once after Skip the rest', () => {
+    expect(afterSave('done')).toBe('celebrate');
+    expect(afterSave('skipRest')).toBe('leave');
   });
 });
 

@@ -61,3 +61,17 @@ export function stackAnimation(reduced: boolean): 'fade' | 'default' {
 export function skeletonPulses(reduced: boolean): boolean {
   return !reduced;
 }
+
+/** The onboarding "done" moment: how the badge appears, and when the screen closes by itself. */
+export type Celebration = { entrance: 'pop' | 'fade'; autoCloseMs: number | null };
+
+/**
+ * The onboarding "done" moment. The badge pops, or only fades under Reduced Motion. No auto-close
+ * while a screen reader runs, so the panel is never cut off before it is read (WCAG 2.2.1).
+ */
+export function celebrationFor({ reduced, screenReader }: { reduced: boolean; screenReader: boolean }): Celebration {
+  return {
+    entrance: reduced ? 'fade' : 'pop',
+    autoCloseMs: screenReader ? null : motion.celebration.holdMs,
+  };
+}
