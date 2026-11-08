@@ -1,5 +1,5 @@
 import type { PublicPlace } from './places';
-import { shortlistView } from './shortlistView';
+import { shortlistFetchKey, shortlistView, type LeavingRow } from './shortlistView';
 
 /** A uuid-shaped place id ending in `n`. */
 function placeId(n: number): string {
@@ -61,12 +61,16 @@ describe('shortlistView', () => {
 
   it('skips a saved place that was not returned, with no error', () => {
     const view = shortlistView({ idsLoading: false, ids: [A, B], places: loaded(makePlace(B)) });
-    expect(view).toEqual({ kind: 'list', results: [{ place: makePlace(B), score: 0, reasons: [] }] });
+    expect(view).toEqual({
+      kind: 'list',
+      rows: [{ result: { place: makePlace(B), score: 0, reasons: [] }, leaving: false }],
+      savedCount: 1,
+    });
   });
 
   it.each(['pending', 'rejected', 'hidden'] as const)('skips a fetched place whose status is %s', (status) => {
     const view = shortlistView({ idsLoading: false, ids: [A, B], places: loaded(makePlace(A, { status }), makePlace(B)) });
-    expect(view.kind === 'list' && view.results.map((result) => result.place.id)).toEqual([B]);
+    expect(view.kind === 'list' && view.rows.map((row) => row.result.place.id)).toEqual([B]);
   });
 
   it('is empty when every saved place is missing', () => {
@@ -79,11 +83,84 @@ describe('shortlistView', () => {
       ids: [C, A, B],
       places: loaded(makePlace(A), makePlace(B), makePlace(C)),
     });
-    expect(view.kind === 'list' && view.results.map((result) => result.place.id)).toEqual([C, A, B]);
+    expect(view.kind === 'list' && view.rows.map((row) => row.result.place.id)).toEqual([C, A, B]);
   });
 
   it('leaves out a fetched place that was just unsaved', () => {
     const view = shortlistView({ idsLoading: false, ids: [B], places: loaded(makePlace(A), makePlace(B)) });
-    expect(view.kind === 'list' && view.results.map((result) => result.place.id)).toEqual([B]);
+    expect(view.kind === 'list' && view.rows.map((row) => row.result.place.id)).toEqual([B]);
+  });
+
+  describe('with leaving rows', () => {
+    const D = placeId(4);
+    const all = loaded(makePlace(A), makePlace(B), makePlace(C));
+
+    function leavingRow(id: string, index: number): LeavingRow {
+      return { result: { place: makePlace(id), score: 0, reasons: [] }, index };
+    }
+
+    function shape(view: ReturnType<typeof shortlistView>) {
+      return view.kind === 'list' ? view.rows.map((row) => `${row.result.place.id.slice(-1)}${row.leaving ? '~' : ''}`) : view.kind;
+    }
+
+    it('puts a leaving row back at its old display index', () => {
+      const view = shortlistView({ idsLoading: false, ids: [A, C], places: all, leaving: [leavingRow(B, 1)] });
+      expect(shape(view)).toEqual(['1', '2~', '3']);
+      expect(view.kind === 'list' && view.savedCount).toBe(2);
+    });
+
+    it('clamps a leaving index past the end to the end', () => {
+      const view = shortlistView({ idsLoading: false, ids: [A], places: all, leaving: [leavingRow(D, 5)] });
+      expect(shape(view)).toEqual(['1', '4~']);
+    });
+
+    it('inserts leaving rows in order, each at its own index', () => {
+      // C left from index 2 of [A, B, C]; then A left from index 0 of [A, B, C~].
+      const view = shortlistView({
+        idsLoading: false,
+        ids: [B],
+        places: all,
+        leaving: [leavingRow(C, 2), leavingRow(A, 0)],
+      });
+      expect(shape(view)).toEqual(['1~', '2', '3~']);
+    });
+
+    it('drops a leaving row whose place is saved again', () => {
+      const view = shortlistView({ idsLoading: false, ids: [A, B, C], places: all, leaving: [leavingRow(B, 1)] });
+      expect(shape(view)).toEqual(['1', '2', '3']);
+    });
+
+    it('keeps the list, with no saved rows, while the last removed place leaves', () => {
+      const view = shortlistView({ idsLoading: false, ids: [], places: all, leaving: [leavingRow(A, 0)] });
+      expect(view).toEqual({ kind: 'list', rows: [{ result: leavingRow(A, 0).result, leaving: true }], savedCount: 0 });
+    });
+
+    it('is empty with no saved rows and nothing leaving', () => {
+      expect(shortlistView({ idsLoading: false, ids: [], places: all, leaving: [] })).toEqual({ kind: 'empty' });
+    });
+  });
+});
+
+describe('shortlistFetchKey', () => {
+  it('is the sorted ids when nothing was fetched yet', () => {
+    expect(shortlistFetchKey([C, A, B], null)).toBe([A, B, C].join(','));
+  });
+
+  it('keeps the last key when ids were only removed', () => {
+    const key = [A, B, C].join(',');
+    expect(shortlistFetchKey([C, A], key)).toBe(key);
+  });
+
+  it('keeps the last key when a removed id comes back', () => {
+    const key = [A, B, C].join(',');
+    expect(shortlistFetchKey([A, B, C], key)).toBe(key);
+  });
+
+  it('is a new sorted key when a new id appears', () => {
+    expect(shortlistFetchKey([C, A], [A, B].join(','))).toBe([A, C].join(','));
+  });
+
+  it('is empty for no ids and no key', () => {
+    expect(shortlistFetchKey([], null)).toBe('');
   });
 });
