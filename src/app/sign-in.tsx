@@ -1,4 +1,4 @@
-import { Link } from 'expo-router';
+import { Link, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View, type TextInputInstance } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -10,6 +10,7 @@ import { useMotion } from '../hooks/useMotion';
 import { useWindowTop } from '../hooks/useWindowTop';
 import { entranceStyle } from '../lib/animations';
 import { authErrorMessage, EMAIL_MAX, PASSWORD_MAX } from '../lib/auth';
+import { authHref, authReturnPath } from '../lib/authRouting';
 import { focusRing, inputBorderColor } from '../lib/controlStyles';
 import { copy } from '../lib/copy';
 import { entranceFor, messageEntrance } from '../lib/motion';
@@ -27,6 +28,8 @@ const errorHint = (error: string | undefined) => (Platform.OS === 'web' ? undefi
 
 export default function SignInScreen() {
   const { signIn } = useAuth();
+  const { returnTo } = useLocalSearchParams<{ returnTo?: string | string[] }>();
+  const back = authReturnPath(returnTo);
   const { reduced } = useMotion();
   const { ref: screenRef, onLayout, top } = useWindowTop();
   const emailRef = useRef<TextInputInstance>(null);
@@ -62,7 +65,7 @@ export default function SignInScreen() {
         setAttempt((n) => n + 1);
         setPassword('');
       }
-      // On success the sign-in guard turns false and the router returns to the home screen.
+      // On success the sign-in guard turns false and the root layout redirects to `returnTo` (home by default).
     } catch {
       setFormError(authErrorMessage(null));
       setAttempt((n) => n + 1);
@@ -167,7 +170,7 @@ export default function SignInScreen() {
             </View>
 
             <View style={styles.links}>
-              <Link href="/sign-up" replace style={textLinkStyle}>
+              <Link href={authHref('/sign-up', back)} replace style={textLinkStyle}>
                 {copy.signUp.link}
               </Link>
               <Link href="/results" replace style={textLinkStyle}>

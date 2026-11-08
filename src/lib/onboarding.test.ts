@@ -8,7 +8,7 @@ import {
   progressLabel,
   progressSegments,
   selectedValues,
-  shouldOpenOnboarding,
+  firstRunOnboarding,
   stepAnnouncement,
   toggleAnswer,
 } from './onboarding';
@@ -143,14 +143,26 @@ describe('afterSave', () => {
   });
 });
 
-describe('shouldOpenOnboarding', () => {
+describe('firstRunOnboarding', () => {
+  const base = {
+    preferencesLoading: false,
+    stored: null,
+    alreadyPrompted: false,
+    authLoading: false,
+    signedIn: false,
+  };
+
   it.each([
-    [{ loading: true, stored: null, alreadyPrompted: false }, false],
-    [{ loading: false, stored: null, alreadyPrompted: false }, true],
-    [{ loading: false, stored: null, alreadyPrompted: true }, false],
-    [{ loading: false, stored: emptyPreferences, alreadyPrompted: false }, false],
-    [{ loading: true, stored: emptyPreferences, alreadyPrompted: true }, false],
-  ])('%p -> %p', (state, expected) => {
-    expect(shouldOpenOnboarding(state)).toBe(expected);
+    ['signed out, loaded, nothing stored', {}, 'open'],
+    ['preferences loading', { preferencesLoading: true }, 'none'],
+    ['auth loading', { authLoading: true }, 'none'],
+    ['auth loading while signed in', { authLoading: true, signedIn: true }, 'none'],
+    ['signed in, nothing stored', { signedIn: true }, 'skip'],
+    ['signed in, preferences stored', { signedIn: true, stored: emptyPreferences }, 'skip'],
+    ['already prompted, signed out', { alreadyPrompted: true }, 'none'],
+    ['already prompted, signed in', { alreadyPrompted: true, signedIn: true }, 'none'],
+    ['signed out, preferences stored', { stored: emptyPreferences }, 'none'],
+  ] as const)('%s -> %p', (_name, change, expected) => {
+    expect(firstRunOnboarding({ ...base, ...change })).toBe(expected);
   });
 });

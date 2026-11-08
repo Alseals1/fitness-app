@@ -1,15 +1,19 @@
-import { Link } from 'expo-router';
+import { Link, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Button } from '../components/Button';
 import { useAuth } from '../hooks/useAuth';
 import { EMAIL_MAX, PASSWORD_MAX, signUpErrorMessage, signUpOutcome, validateSignUp } from '../lib/auth';
+import { authHref, authReturnPath } from '../lib/authRouting';
 import { copy } from '../lib/copy';
 import { borderWidth, colors, minTouchTarget, radius, spacing, typography } from '../lib/theme';
 
 export default function SignUpScreen() {
   const { signUp } = useAuth();
+  const { returnTo } = useLocalSearchParams<{ returnTo?: string | string[] }>();
+  // Carried to the sign-in links, so switching screens still returns to the same place.
+  const back = authReturnPath(returnTo);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +37,7 @@ export default function SignUpScreen() {
         setConfirmEmail(true);
         setPassword('');
       }
-      // signedIn: the sign-up guard turns false and the router returns to the home screen.
+      // signedIn: the sign-up guard turns false and the root layout redirects to `returnTo` (home by default).
     } catch {
       setError(signUpErrorMessage(null));
     } finally {
@@ -47,7 +51,7 @@ export default function SignUpScreen() {
         <Text style={styles.body} accessibilityLiveRegion="polite">
           {copy.signUp.confirmEmail}
         </Text>
-        <Link href="/sign-in" replace style={styles.link}>
+        <Link href={authHref('/sign-in', back)} replace style={styles.link}>
           {copy.signIn}
         </Link>
       </View>
@@ -103,7 +107,7 @@ export default function SignUpScreen() {
           onPress={onSubmit}
           disabled={submitting}
         />
-        <Link href="/sign-in" replace style={styles.link}>
+        <Link href={authHref('/sign-in', back)} replace style={styles.link}>
           {copy.signUp.signInLink}
         </Link>
       </ScrollView>

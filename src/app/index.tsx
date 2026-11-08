@@ -7,7 +7,7 @@ import { useAuth } from '../hooks/useAuth';
 import { usePreferences } from '../hooks/usePreferences';
 import { homeAccountView } from '../lib/adminCheck';
 import { copy } from '../lib/copy';
-import { shouldOpenOnboarding } from '../lib/onboarding';
+import { firstRunOnboarding } from '../lib/onboarding';
 import { colors, spacing, typography } from '../lib/theme';
 
 // Onboarding opens by itself at most once per app launch, so backing out of it never loops.
@@ -28,14 +28,24 @@ export default function HomeScreen() {
     }
   };
 
-  // First run: nothing saved yet. This never blocks browsing; the person can back out.
+  // First run: a signed-out person with nothing saved yet. This never blocks browsing; the
+  // person can back out. A signed-in business or admin is never sent to the consumer quiz.
+  const signedIn = session !== null;
   useEffect(() => {
-    const state = { loading: preferencesLoading, stored: preferences, alreadyPrompted: promptedThisLaunch };
-    if (shouldOpenOnboarding(state)) {
+    const next = firstRunOnboarding({
+      preferencesLoading,
+      stored: preferences,
+      alreadyPrompted: promptedThisLaunch,
+      authLoading: loading,
+      signedIn,
+    });
+    if (next === 'skip') {
+      promptedThisLaunch = true;
+    } else if (next === 'open') {
       promptedThisLaunch = true;
       router.push('/onboarding');
     }
-  }, [preferencesLoading, preferences]);
+  }, [preferencesLoading, preferences, loading, signedIn]);
 
   return (
     <View style={styles.container}>
