@@ -10,6 +10,7 @@ import {
   type AdminCheckResult,
   type AdminStatus,
 } from '../lib/adminCheck';
+import { nextAuthReady } from '../lib/authRouting';
 import { supabase } from '../lib/supabase';
 
 type AuthContextValue = {
@@ -22,6 +23,8 @@ type AuthContextValue = {
   recheckAdmin: () => Promise<void>;
   /** True until the stored session (and, when signed in, the first admin check) has loaded. */
   loading: boolean;
+  /** True once the first load (stored session and, when signed in, its admin check) has finished. Never turns false again. */
+  ready: boolean;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   /** Creates a business account. `needsConfirmation` is true when the server wants the email confirmed first. */
   signUp: (email: string, password: string) => Promise<{ error: AuthError | null; needsConfirmation: boolean }>;
@@ -132,9 +135,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // A retry keeps the last answer until the new one arrives, so `loading` never comes back on.
   const loading = !sessionLoaded || adminStatus === 'checking';
 
+  // Latches after the first load, so the admin check that follows a sign-in never hides the app.
+  // Set during render (React's "adjust state when a prop changes"), not in an effect, so the
+  // first ready render already has the settled session and admin answer.
+  const [ready, setReady] = useState(false);
+  const nextReady = nextAuthReady(ready, loading);
+  if (nextReady !== ready) setReady(nextReady);
+
   const value = useMemo<AuthContextValue>(
-    () => ({ session, isAdmin, adminStatus, recheckAdmin, loading, signIn, signUp, signOut }),
-    [session, isAdmin, adminStatus, recheckAdmin, loading, signIn, signUp, signOut],
+    () => ({ session, isAdmin, adminStatus, recheckAdmin, loading, ready, signIn, signUp, signOut }),
+    [session, isAdmin, adminStatus, recheckAdmin, loading, ready, signIn, signUp, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
