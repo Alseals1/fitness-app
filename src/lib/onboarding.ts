@@ -106,14 +106,29 @@ export function afterSave(trigger: SaveTrigger): 'celebrate' | 'leave' {
   return trigger === 'done' ? 'celebrate' : 'leave';
 }
 
+/** What home does about the first-run quiz: open it, mark the launch as prompted without opening it, or nothing yet. */
+export type FirstRunOnboarding = 'open' | 'skip' | 'none';
+
 /**
- * Whether home should open onboarding by itself: only once loading is done, nothing is
- * saved, and it has not already been opened this launch.
+ * Whether home should open onboarding by itself. The quiz is the first-run prompt for
+ * signed-out people only:
+ * - already prompted this launch: never again, so backing out never loops;
+ * - preferences or auth still loading: decide later, once both are known;
+ * - signed in (a business or an admin): `skip`, which marks the launch as prompted, so the
+ *   consumer quiz never opens for them, nor after they sign out in the same launch;
+ * - preferences already saved: nothing to ask;
+ * - otherwise: open it.
  */
-export function shouldOpenOnboarding(state: {
-  loading: boolean;
+export function firstRunOnboarding(state: {
+  preferencesLoading: boolean;
   stored: Preferences | null;
   alreadyPrompted: boolean;
-}): boolean {
-  return !state.loading && state.stored === null && !state.alreadyPrompted;
+  authLoading: boolean;
+  signedIn: boolean;
+}): FirstRunOnboarding {
+  if (state.alreadyPrompted) return 'none';
+  if (state.preferencesLoading || state.authLoading) return 'none';
+  if (state.signedIn) return 'skip';
+  if (state.stored !== null) return 'none';
+  return 'open';
 }
