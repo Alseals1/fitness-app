@@ -113,6 +113,8 @@ export type FirstRunOnboarding = 'open' | 'skip' | 'none';
  * Whether home should open onboarding by itself. The quiz is the first-run prompt for
  * signed-out people only:
  * - already prompted this launch: never again, so backing out never loops;
+ * - home not the screen in view: decide later. A deep link or a refresh mounts home under the
+ *   opened screen (the root anchor), and the quiz must not cover a shared place;
  * - preferences or auth still loading: decide later, once both are known;
  * - signed in (a business or an admin): `skip`, which marks the launch as prompted, so the
  *   consumer quiz never opens for them, nor after they sign out in the same launch;
@@ -125,8 +127,10 @@ export function firstRunOnboarding(state: {
   alreadyPrompted: boolean;
   authLoading: boolean;
   signedIn: boolean;
+  focused: boolean;
 }): FirstRunOnboarding {
   if (state.alreadyPrompted) return 'none';
+  if (!state.focused) return 'none';
   if (state.preferencesLoading || state.authLoading) return 'none';
   if (state.signedIn) return 'skip';
   if (state.stored !== null) return 'none';

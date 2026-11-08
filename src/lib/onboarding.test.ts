@@ -150,6 +150,7 @@ describe('firstRunOnboarding', () => {
     alreadyPrompted: false,
     authLoading: false,
     signedIn: false,
+    focused: true,
   };
 
   it.each([
@@ -162,6 +163,8 @@ describe('firstRunOnboarding', () => {
     ['already prompted, signed out', { alreadyPrompted: true }, 'none'],
     ['already prompted, signed in', { alreadyPrompted: true, signedIn: true }, 'none'],
     ['signed out, preferences stored', { stored: emptyPreferences }, 'none'],
+    ['home not in view (deep link), signed out, nothing stored', { focused: false }, 'none'],
+    ['home not in view (deep link), signed in', { focused: false, signedIn: true }, 'none'],
   ] as const)('%s -> %p', (_name, change, expected) => {
     expect(firstRunOnboarding({ ...base, ...change })).toBe(expected);
   });

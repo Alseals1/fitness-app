@@ -1,4 +1,4 @@
-import { Link, router } from 'expo-router';
+import { Link, router, useIsFocused } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -30,7 +30,10 @@ export default function HomeScreen() {
 
   // First run: a signed-out person with nothing saved yet. This never blocks browsing; the
   // person can back out. A signed-in business or admin is never sent to the consumer quiz.
+  // Only while home is in view: a deep link mounts home under the opened screen, and the quiz
+  // waits until the person backs out to home.
   const signedIn = session !== null;
+  const focused = useIsFocused();
   useEffect(() => {
     const next = firstRunOnboarding({
       preferencesLoading,
@@ -38,6 +41,7 @@ export default function HomeScreen() {
       alreadyPrompted: promptedThisLaunch,
       authLoading: loading,
       signedIn,
+      focused,
     });
     if (next === 'skip') {
       promptedThisLaunch = true;
@@ -45,7 +49,7 @@ export default function HomeScreen() {
       promptedThisLaunch = true;
       router.push('/onboarding');
     }
-  }, [preferencesLoading, preferences, loading, signedIn]);
+  }, [preferencesLoading, preferences, loading, signedIn, focused]);
 
   return (
     <View style={styles.container}>
