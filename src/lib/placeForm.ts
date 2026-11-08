@@ -38,6 +38,25 @@ export type PlaceFormField = Exclude<keyof PlaceFieldValues, 'tags'> | 'contact'
 
 export type PlaceFormErrors = Partial<Record<PlaceFormField, string>>;
 
+/**
+ * Every field that can have an error, in the order `PlaceFields` draws them, top to bottom. A
+ * failed send scrolls to the first one with an error, so keep this in step with `PlaceFields`.
+ * `contact` is the message under the contact fields.
+ */
+export const PLACE_FIELD_ORDER: readonly PlaceFormField[] = [
+  'category',
+  'area',
+  'price_range',
+  'name',
+  'description',
+  'schedule',
+  'contact',
+  'website_url',
+  'contact_phone',
+  'contact_email',
+  'instagram_handle',
+];
+
 export type PlaceFieldsResult = { ok: true; fields: PlaceFields } | { ok: false; errors: PlaceFormErrors };
 
 export type PlaceFormResult = { ok: true; args: CreatePlaceArgs } | { ok: false; errors: PlaceFormErrors };
