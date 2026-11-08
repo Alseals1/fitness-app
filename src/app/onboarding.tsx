@@ -18,6 +18,7 @@ import { celebrationFor, entranceFor, type Celebration } from '../lib/motion';
 import {
   ONBOARDING_STEPS,
   afterSave,
+  exitOnboarding,
   isLastStep,
   primaryActionLabel,
   selectedValues,
@@ -61,11 +62,7 @@ export default function OnboardingScreen() {
   const leave = useCallback(() => {
     if (leftRef.current) return;
     leftRef.current = true;
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/');
-    }
+    exitOnboarding(router);
   }, []);
 
   // The "done" moment closes by itself unless a screen reader runs (then it waits for "Continue").
