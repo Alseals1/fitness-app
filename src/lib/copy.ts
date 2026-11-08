@@ -15,6 +15,12 @@ export const copy = {
   verified: 'Verified',
   certified: 'Certified',
   loading: 'Loading…',
+  /** The signed-in account area on the home screen. Business accounts can see this too. */
+  account: {
+    checkFailed: "Couldn't check your account. Check your connection and try again.",
+    retry: 'Try again',
+    retrying: 'Checking…',
+  },
   signUp: {
     title: 'Create an account',
     intro: "For businesses that want to list or claim a place. You don't need an account to browse.",

@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { showsCertifyControl, type Submission } from '../lib/admin';
 import { copy } from '../lib/copy';
-import { AREA_LABELS, CATEGORY_LABELS, PRICE_LABELS, TAG_LABELS } from '../lib/placeOptions';
+import { placeMeta, TAG_LABELS } from '../lib/placeOptions';
 import type { PublicPlace } from '../lib/places';
 import { borderWidth, colors, radius, spacing, typography } from '../lib/theme';
 import { Button } from './Button';
@@ -55,9 +55,7 @@ export function PendingPlaceCard({
         {place.is_verified ? <Text style={styles.verified}>{copy.verified}</Text> : null}
         {place.is_certified ? <Text style={styles.verified}>{copy.certified}</Text> : null}
       </View>
-      <Text style={styles.meta}>
-        {[CATEGORY_LABELS[place.category], AREA_LABELS[place.area], PRICE_LABELS[place.price_range]].join(' · ')}
-      </Text>
+      <Text style={styles.meta}>{placeMeta(place)}</Text>
       {place.description ? <Text style={styles.body}>{place.description}</Text> : null}
       {place.schedule ? <Text style={styles.small}>{place.schedule}</Text> : null}
       {contacts.map((contact) => (

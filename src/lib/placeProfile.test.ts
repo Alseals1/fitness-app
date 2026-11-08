@@ -171,6 +171,10 @@ describe('phoneLink', () => {
     ['205-555-0101', 'tel:2055550101'],
     ['+1 (205) 555 0101', 'tel:+12055550101'],
     ['(205) 555.0101 ext', 'tel:2055550101'],
+    ['205-555-0101 ext 12', 'tel:2055550101'],
+    ['205-555-0101 x12', 'tel:2055550101'],
+    ['205-555-0101 / 205-555-0102', 'tel:2055550101'],
+    ['205-555-0101, 205-555-0102', 'tel:2055550101'],
   ])('turns %p into %p', (raw, url) => {
     expect(phoneLink(raw)).toMatchObject({ text: raw, url });
   });
@@ -184,6 +188,15 @@ describe('phoneLink', () => {
       accessibilityLabel: 'Call call us',
     });
     expect(phoneLink('555-01')?.url).toBeNull();
+  });
+
+  it('never dials a number that does not start the value', () => {
+    expect(phoneLink('call 205 555 0101')).toMatchObject({ text: 'call 205 555 0101', url: null });
+  });
+
+  it('shows a value with too many digits as text only', () => {
+    expect(phoneLink('2055550101205555')?.url).toBeNull();
+    expect(phoneLink('205 555 0101 205 555 0102')?.url).toBeNull();
   });
 
   it('leaves out an empty value', () => {
