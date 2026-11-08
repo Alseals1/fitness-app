@@ -15,6 +15,12 @@ export const copy = {
   verified: 'Verified',
   certified: 'Certified',
   loading: 'Loading…',
+  /** The sign-in screen. */
+  signInScreen: {
+    title: 'Welcome back',
+    intro: "For businesses and our review team. You don't need an account to browse places.",
+    browseLink: 'Browse places without an account',
+  },
   /** The signed-in account area on the home screen. Business accounts can see this too. */
   account: {
     checkFailed: "Couldn't check your account. Check your connection and try again.",

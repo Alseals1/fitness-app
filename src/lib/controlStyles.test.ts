@@ -4,6 +4,7 @@ import {
   chipColors,
   colorStyle,
   focusRing,
+  inputBorderColor,
   saveButtonColors,
   type ButtonVariant,
   type ControlColors,
@@ -112,5 +113,25 @@ describe('colorStyle', () => {
       backgroundColor: '#FFFFFF',
       borderColor: '#000000',
     });
+  });
+});
+
+describe('inputBorderColor', () => {
+  const cases = flags.flatMap((focused) => flags.map((invalid) => ({ focused, invalid })));
+
+  it.each(cases.map((s) => [name(s), s] as const))('%s is at least 3:1 on background and surface', (_label, state) => {
+    const edge = inputBorderColor(state);
+    expect(contrastRatio(edge, colors.background)).toBeGreaterThanOrEqual(3);
+    expect(contrastRatio(edge, colors.surface)).toBeGreaterThanOrEqual(3);
+  });
+
+  it('shows focused and invalid with their own colours', () => {
+    expect(inputBorderColor({ focused: false, invalid: false })).toBe(colors.borderStrong);
+    expect(inputBorderColor({ focused: true, invalid: false })).toBe(colors.primary);
+    expect(inputBorderColor({ focused: false, invalid: true })).toBe(colors.danger);
+  });
+
+  it('invalid wins over focused', () => {
+    expect(inputBorderColor({ focused: true, invalid: true })).toBe(colors.danger);
   });
 });

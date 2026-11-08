@@ -3,13 +3,34 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { borderWidth, colors, minTouchTarget, radius, spacing, typography } from '../lib/theme';
 
-/** A labelled form field with its error under it. */
-export function FormField({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
+/**
+ * A labelled form field with its error under it. With `liveError`, the error is a polite live
+ * region, so a screen reader reads it when it appears.
+ */
+export function FormField({
+  label,
+  error,
+  liveError = false,
+  children,
+}: {
+  label: string;
+  error?: string;
+  liveError?: boolean;
+  children: ReactNode;
+}) {
   return (
     <View style={formStyles.field}>
       <Text style={formStyles.label}>{label}</Text>
       {children}
-      {error ? <Text style={formStyles.errorText}>{error}</Text> : null}
+      {error ? (
+        <Text
+          style={formStyles.errorText}
+          accessibilityLiveRegion={liveError ? 'polite' : undefined}
+          aria-live={liveError ? 'polite' : undefined}
+        >
+          {error}
+        </Text>
+      ) : null}
     </View>
   );
 }

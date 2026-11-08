@@ -52,6 +52,15 @@ export function saveButtonColors({ pressed, selected }: Omit<SelectableState, 'd
   return selected ? filled(pressed) : outlined(pressed, colors.borderStrong, colors.text);
 }
 
+/**
+ * An input's edge. Invalid wins over focused, so an error stays visible while the user fixes it.
+ * Each colour is at least 3:1 on `background` and `surface`.
+ */
+export function inputBorderColor({ focused, invalid }: { focused: boolean; invalid: boolean }): string {
+  if (invalid) return colors.danger;
+  return focused ? colors.primary : colors.borderStrong;
+}
+
 /** The fill and edge of a control. Its text colour goes on the `Text`. */
 export function colorStyle(c: ControlColors): ViewStyle {
   return { backgroundColor: c.background, borderColor: c.border };
