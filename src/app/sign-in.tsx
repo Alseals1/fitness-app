@@ -10,7 +10,7 @@ import { useMotion } from '../hooks/useMotion';
 import { useWindowTop } from '../hooks/useWindowTop';
 import { entranceStyle } from '../lib/animations';
 import { authErrorMessage, EMAIL_MAX, PASSWORD_MAX } from '../lib/auth';
-import { inputBorderColor } from '../lib/controlStyles';
+import { focusRing, inputBorderColor } from '../lib/controlStyles';
 import { copy } from '../lib/copy';
 import { entranceFor, messageEntrance } from '../lib/motion';
 import {
@@ -80,10 +80,13 @@ export default function SignInScreen() {
   }
 
   function inputStyle(field: SignInField) {
+    const focused = focusedField === field;
     return [
       formStyles.input,
       styles.input,
-      { borderColor: inputBorderColor({ focused: focusedField === field, invalid: !!fieldErrors[field] }) },
+      { borderColor: inputBorderColor({ focused, invalid: !!fieldErrors[field] }) },
+      // Web draws the app's focus ring instead of the browser's, so a red edge stays visible.
+      Platform.OS === 'web' ? focusRing(focused) : null,
     ];
   }
 
