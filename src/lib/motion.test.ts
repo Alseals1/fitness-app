@@ -2,6 +2,7 @@ import {
   celebrationFor,
   entranceFor,
   exitFor,
+  messageEntrance,
   pressScale,
   rowEntrance,
   saveFeedback,
@@ -172,5 +173,11 @@ describe('exitFor', () => {
 
   it('only fades, quicker, under Reduced Motion', () => {
     expect(exitFor({ reduced: true })).toEqual({ kind: 'fade', duration: motion.duration.fast });
+  });
+});
+
+describe('messageEntrance', () => {
+  it('is a fade over the fast duration', () => {
+    expect(messageEntrance()).toEqual({ kind: 'fade', duration: motion.duration.fast });
   });
 });

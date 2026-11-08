@@ -51,6 +51,14 @@ export function rowEntrance({
   return entranceFor({ index: restored ? 0 : index, reduced, animate: firstPaint || restored });
 }
 
+/**
+ * How a form message (for example a sign-in error) appears: a quick opacity-only fade. It moves
+ * nothing, so it runs under Reduced Motion too, as `entranceFor` already treats a fade.
+ */
+export function messageEntrance(): Entrance {
+  return { kind: 'fade', duration: motion.duration.fast };
+}
+
 /** How a removed list row leaves. */
 export type Exit = { kind: 'fade'; duration: number } | { kind: 'collapse'; duration: number };
 
