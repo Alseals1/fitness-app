@@ -6,7 +6,7 @@
 import { Easing, FadeIn, ReduceMotion, cubicBezier } from 'react-native-reanimated';
 import type { CSSAnimationProperties, CSSTransitionProperties } from 'react-native-reanimated';
 
-import type { Celebration, Entrance } from './motion';
+import type { Celebration, Entrance, Exit } from './motion';
 import { motion } from './theme';
 
 /** The ease-out curve for CSS transitions and animations. */
@@ -58,6 +58,23 @@ export function entranceStyle(entrance: Entrance): CSSAnimationProperties | unde
         animationFillMode: 'backwards',
       };
   }
+}
+
+/**
+ * A removed row's exit as a CSS animation, for the same web reason as `entranceStyle`. `forwards`
+ * holds the last frame until the row unmounts. A collapse needs the row's measured height; before
+ * the row is measured it only fades, over the same time. The row clips its content while it collapses.
+ */
+export function exitStyle(exit: Exit, height: number | null): CSSAnimationProperties {
+  const timing = {
+    animationDuration: exit.duration,
+    animationTimingFunction: cssEaseOut,
+    animationFillMode: 'forwards',
+  } as const;
+  if (exit.kind === 'collapse' && height !== null) {
+    return { animationName: { from: { opacity: 1, height }, to: { opacity: 0, height: 0 } }, ...timing };
+  }
+  return { animationName: { from: { opacity: 1 }, to: { opacity: 0 } }, ...timing };
 }
 
 /** A progress bar segment easing its colour as it fills. A colour change, so it runs under Reduced Motion too. */
