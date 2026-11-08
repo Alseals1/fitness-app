@@ -17,7 +17,8 @@ export default function BusinessLayout() {
         <Stack.Screen name="new" options={{ title: copy.business.newTitle }} />
         <Stack.Screen name="claim" options={{ title: copy.business.claimTitle }} />
       </Stack.Protected>
-      {/* No back to the filled form: the forms replace themselves with this screen. */}
+      {/* No back to the filled form: the forms replace themselves with this screen. It redirects to
+          /business unless a form just sent. */}
       <Stack.Screen name="submitted" options={{ title: copy.business.submittedTitle, headerBackVisible: false }} />
     </Stack>
   );

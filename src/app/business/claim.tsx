@@ -16,6 +16,7 @@ import { copy } from '../../lib/copy';
 import { PLACE_LIMITS } from '../../lib/placeForm';
 import { AREA_LABELS, CATEGORY_LABELS } from '../../lib/placeOptions';
 import { fetchApprovedPlaces, type PublicPlace } from '../../lib/places';
+import { markJustSent } from '../../lib/submitted';
 import { supabase } from '../../lib/supabase';
 import { borderWidth, colors, minTouchTarget, opacity, radius, spacing, typography } from '../../lib/theme';
 
@@ -69,6 +70,7 @@ export default function ClaimScreen() {
     setSending(false);
     if (result.ok) {
       // Replace, so Back never returns to the filled form.
+      markJustSent();
       router.replace('/business/submitted');
     } else {
       setServerError(result.message);
