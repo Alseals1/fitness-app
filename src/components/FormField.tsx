@@ -1,25 +1,28 @@
-import type { ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import type { ReactNode, Ref } from 'react';
+import { StyleSheet, Text, View, type ViewInstance } from 'react-native';
 
 import { borderWidth, colors, minTouchTarget, radius, spacing, typography } from '../lib/theme';
 
 /**
  * A labelled form field with its error under it. With `liveError`, the error is a polite live
- * region, so a screen reader reads it when it appears.
+ * region, so a screen reader reads it when it appears. `ref` is the field's outer view, for
+ * scrolling to it.
  */
 export function FormField({
   label,
   error,
   liveError = false,
   children,
+  ref,
 }: {
   label: string;
   error?: string;
   liveError?: boolean;
   children: ReactNode;
+  ref?: Ref<ViewInstance>;
 }) {
   return (
-    <View style={formStyles.field}>
+    <View ref={ref} style={formStyles.field}>
       <Text style={formStyles.label}>{label}</Text>
       {children}
       {error ? (

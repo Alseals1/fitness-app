@@ -5,10 +5,12 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Switch, Text, V
 import { Button } from '../../components/Button';
 import { formStyles } from '../../components/FormField';
 import { PlaceFields } from '../../components/PlaceFields';
+import { useScrollToFirstError } from '../../hooks/useScrollToFirstError';
 import { createPlace } from '../../lib/admin';
 import { copy } from '../../lib/copy';
 import {
   emptyPlaceForm,
+  PLACE_FIELD_ORDER,
   validatePlaceForm,
   type PlaceFieldValues,
   type PlaceFormErrors,
@@ -22,6 +24,7 @@ export default function NewPlaceScreen() {
   const [errors, setErrors] = useState<PlaceFormErrors>({});
   const [serverError, setServerError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const { scrollRef, register, reveal } = useScrollToFirstError(PLACE_FIELD_ORDER);
 
   function set<K extends keyof PlaceFormValues>(key: K, value: PlaceFormValues[K]) {
     setValues((current) => ({ ...current, [key]: value }));
@@ -36,6 +39,7 @@ export default function NewPlaceScreen() {
     setServerError(null);
     if (!checked.ok) {
       setErrors(checked.errors);
+      reveal(checked.errors);
       return;
     }
     setErrors({});
@@ -54,8 +58,8 @@ export default function NewPlaceScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView style={styles.flex} contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
-        <PlaceFields values={values} errors={errors} onChange={setPlaceField} disabled={saving} />
+      <ScrollView ref={scrollRef} style={styles.flex} contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
+        <PlaceFields values={values} errors={errors} onChange={setPlaceField} disabled={saving} register={register} />
 
         <View style={styles.switchRow}>
           <Text style={styles.switchLabel}>{copy.newPlace.approveNow}</Text>

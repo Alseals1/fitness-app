@@ -5,8 +5,10 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { Button } from '../../components/Button';
 import { FormField, formStyles } from '../../components/FormField';
 import { VerificationFields } from '../../components/VerificationFields';
+import { useScrollToFirstError } from '../../hooks/useScrollToFirstError';
 import { filterClaimablePlaces, submitClaim } from '../../lib/business';
 import {
+  CLAIM_FIELD_ORDER,
   emptyVerification,
   validateClaim,
   type BusinessFormErrors,
@@ -30,6 +32,8 @@ export default function ClaimScreen() {
   const [errors, setErrors] = useState<BusinessFormErrors>({});
   const [serverError, setServerError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const { scrollRef, register, reveal } = useScrollToFirstError(CLAIM_FIELD_ORDER);
+  const { container: searchField, input: searchInput } = register('place');
 
   const loadPlaces = useCallback(async () => {
     const result = await fetchApprovedPlaces(supabase);
@@ -62,6 +66,7 @@ export default function ClaimScreen() {
     setServerError(null);
     if (!checked.ok) {
       setErrors(checked.errors);
+      reveal(checked.errors);
       return;
     }
     setErrors({});
@@ -81,7 +86,7 @@ export default function ClaimScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView style={styles.flex} contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
+      <ScrollView ref={scrollRef} style={styles.flex} contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
         {chosen ? (
           <View style={styles.chosen}>
             <Text style={formStyles.label}>{copy.business.chosen}</Text>
@@ -97,8 +102,9 @@ export default function ClaimScreen() {
             />
           </View>
         ) : (
-          <FormField label={copy.business.searchLabel} error={errors.place}>
+          <FormField ref={searchField} label={copy.business.searchLabel} error={errors.place}>
             <TextInput
+              ref={searchInput}
               style={[formStyles.input, errors.place && formStyles.inputError]}
               value={query}
               onChangeText={setQuery}
@@ -146,6 +152,7 @@ export default function ClaimScreen() {
               onChange={setVerificationField}
               showCertification={chosen.category === 'trainer'}
               disabled={sending}
+              register={register}
             />
             {hasErrors ? <Text style={formStyles.errorText}>{copy.business.fixErrors}</Text> : null}
             {serverError ? (

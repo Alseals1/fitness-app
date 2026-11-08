@@ -1,13 +1,16 @@
 import {
   BUSINESS_FORM_MESSAGES,
+  CLAIM_FIELD_ORDER,
   emptyVerification,
+  NEW_LISTING_FIELD_ORDER,
   validateClaim,
   validateNewListing,
   validateVerification,
   VERIFICATION_LIMITS,
   type VerificationValues,
 } from './businessForm';
-import { emptyPlaceFields, PLACE_FORM_MESSAGES, type PlaceFieldValues } from './placeForm';
+import { firstErrorField } from './formErrors';
+import { emptyPlaceFields, PLACE_FORM_MESSAGES, PLACE_LIMITS, type PlaceFieldValues } from './placeForm';
 
 const place: PlaceFieldValues = {
   ...emptyPlaceFields,
@@ -209,5 +212,69 @@ describe('validateClaim', () => {
   it('drops the certification name for a place that is not a trainer', () => {
     const result = validateClaim({ ...target, category: 'gym' }, { ...verification, certification_name: 'X' });
     expect(result.ok && result.args.p_certification_name).toBeUndefined();
+  });
+});
+
+describe('field order', () => {
+  function firstError(result: ReturnType<typeof validateNewListing>) {
+    return result.ok ? null : firstErrorField(result.errors, NEW_LISTING_FIELD_ORDER);
+  }
+
+  it('puts category first on an empty new listing', () => {
+    expect(firstError(validateNewListing(emptyPlaceFields, emptyVerification))).toBe('category');
+  });
+
+  it('finds the note when only the note is wrong', () => {
+    const note = 'x'.repeat(VERIFICATION_LIMITS.noteMax + 1);
+    expect(firstError(validateNewListing(place, { ...verification, note }))).toBe('note');
+  });
+
+  it('finds the contact message when no contact is given', () => {
+    expect(firstError(validateNewListing({ ...place, instagram_handle: '' }, verification))).toBe('contact');
+  });
+
+  it('lists every field a new listing can flag', () => {
+    const results = [
+      validateNewListing(emptyPlaceFields, emptyVerification),
+      validateNewListing(
+        {
+          ...emptyPlaceFields,
+          category: 'trainer',
+          description: 'x'.repeat(PLACE_LIMITS.descriptionMax + 1),
+          schedule: 'x'.repeat(PLACE_LIMITS.scheduleMax + 1),
+          website_url: 'example.com',
+          contact_phone: '1',
+          contact_email: 'not an email',
+          instagram_handle: 'not a handle!',
+        },
+        {
+          verification_email: 'not an email',
+          verification_social: 'x'.repeat(VERIFICATION_LIMITS.socialMax + 1),
+          certification_name: 'x'.repeat(VERIFICATION_LIMITS.certificationMax + 1),
+          note: 'x'.repeat(VERIFICATION_LIMITS.noteMax + 1),
+        },
+      ),
+    ];
+    const keys = new Set(results.flatMap((result) => (result.ok ? [] : Object.keys(result.errors))));
+    expect(keys.size).toBe(NEW_LISTING_FIELD_ORDER.length);
+    for (const key of keys) expect(NEW_LISTING_FIELD_ORDER).toContain(key);
+    expect(new Set(NEW_LISTING_FIELD_ORDER).size).toBe(NEW_LISTING_FIELD_ORDER.length);
+  });
+
+  it('lists every field a claim can flag, with the place first', () => {
+    const empty = validateClaim(null, emptyVerification);
+    expect(!empty.ok && firstErrorField(empty.errors, CLAIM_FIELD_ORDER)).toBe('place');
+    const bad = validateClaim(
+      { id: 'sample-id', category: 'trainer' },
+      {
+        verification_email: 'not an email',
+        verification_social: 'x'.repeat(VERIFICATION_LIMITS.socialMax + 1),
+        certification_name: 'x'.repeat(VERIFICATION_LIMITS.certificationMax + 1),
+        note: 'x'.repeat(VERIFICATION_LIMITS.noteMax + 1),
+      },
+    );
+    const keys = new Set([...Object.keys(!empty.ok ? empty.errors : {}), ...Object.keys(!bad.ok ? bad.errors : {})]);
+    expect(keys.size).toBe(CLAIM_FIELD_ORDER.length);
+    for (const key of keys) expect(CLAIM_FIELD_ORDER).toContain(key);
   });
 });

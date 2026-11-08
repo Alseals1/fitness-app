@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import type { Ref } from 'react';
+import { Pressable, StyleSheet, Text, View, type PressableInstance } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { useFocusState } from '../hooks/useFocusState';
@@ -19,6 +20,8 @@ type Props<T extends string> = {
   multiple?: boolean;
   /** `large`: taller chips with more room, for onboarding answers. Defaults to `regular`. */
   size?: 'regular' | 'large';
+  /** The first chip, so a form can move focus to the group. */
+  firstChipRef?: Ref<PressableInstance>;
 };
 
 /** A row of chips for picking one value (category, area, price) or several (tags). */
@@ -30,12 +33,14 @@ export function OptionChips<T extends string>({
   accessibilityLabel,
   multiple = false,
   size = 'regular',
+  firstChipRef,
 }: Props<T>) {
   return (
     <View style={[styles.row, size === 'large' && styles.rowLarge]} accessibilityLabel={accessibilityLabel} accessibilityRole={multiple ? undefined : 'radiogroup'}>
-      {options.map((option) => (
+      {options.map((option, index) => (
         <Chip
           key={option.value}
+          ref={index === 0 ? firstChipRef : undefined}
           label={option.label}
           selected={selected.includes(option.value)}
           disabled={disabled}
@@ -55,14 +60,16 @@ type ChipProps = {
   multiple: boolean;
   large: boolean;
   onPress: () => void;
+  ref?: Ref<PressableInstance>;
 };
 
 /** One chip. Its own component so each chip tracks its own focus. Press feedback works as in `Button`. */
-function Chip({ label, selected, disabled, multiple, large, onPress }: ChipProps) {
+function Chip({ label, selected, disabled, multiple, large, onPress, ref }: ChipProps) {
   const { focused, onFocus, onBlur } = useFocusState();
   const { reduced } = useMotion();
   return (
     <Pressable
+      ref={ref}
       onPress={onPress}
       onFocus={onFocus}
       onBlur={onBlur}

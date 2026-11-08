@@ -6,9 +6,11 @@ import { Button } from '../../components/Button';
 import { formStyles } from '../../components/FormField';
 import { PlaceFields } from '../../components/PlaceFields';
 import { VerificationFields } from '../../components/VerificationFields';
+import { useScrollToFirstError } from '../../hooks/useScrollToFirstError';
 import { submitNewPlace } from '../../lib/business';
 import {
   emptyVerification,
+  NEW_LISTING_FIELD_ORDER,
   validateNewListing,
   type BusinessFormErrors,
   type VerificationValues,
@@ -25,6 +27,7 @@ export default function NewListingScreen() {
   const [errors, setErrors] = useState<BusinessFormErrors>({});
   const [serverError, setServerError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const { scrollRef, register, reveal } = useScrollToFirstError(NEW_LISTING_FIELD_ORDER);
 
   function setPlaceField<K extends keyof PlaceFieldValues>(key: K, value: PlaceFieldValues[K]) {
     setPlace((current) => ({ ...current, [key]: value }));
@@ -39,6 +42,7 @@ export default function NewListingScreen() {
     setServerError(null);
     if (!checked.ok) {
       setErrors(checked.errors);
+      reveal(checked.errors);
       return;
     }
     setErrors({});
@@ -58,14 +62,15 @@ export default function NewListingScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView style={styles.flex} contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
-        <PlaceFields values={place} errors={errors} onChange={setPlaceField} disabled={sending} />
+      <ScrollView ref={scrollRef} style={styles.flex} contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
+        <PlaceFields values={place} errors={errors} onChange={setPlaceField} disabled={sending} register={register} />
         <VerificationFields
           values={verification}
           errors={errors}
           onChange={setVerificationField}
           showCertification={place.category === 'trainer'}
           disabled={sending}
+          register={register}
         />
 
         {hasErrors ? <Text style={formStyles.errorText}>{copy.business.fixErrors}</Text> : null}

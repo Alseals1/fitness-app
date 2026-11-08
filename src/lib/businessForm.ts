@@ -2,6 +2,7 @@ import { EMAIL_MAX } from './auth';
 import type { Database, Enums } from './database.types';
 import {
   EMAIL_PATTERN,
+  PLACE_FIELD_ORDER,
   validatePlaceFields,
   type PlaceFieldValues,
   type PlaceFormErrors,
@@ -122,6 +123,26 @@ export function validateVerification(
 }
 
 export type BusinessFormErrors = PlaceFormErrors & VerificationErrors & { place?: string };
+
+export type BusinessFormField = keyof BusinessFormErrors;
+
+/**
+ * Every verification field that can have an error, in the order `VerificationFields` draws
+ * them. `verification` is the message under the email and social fields.
+ */
+export const VERIFICATION_FIELD_ORDER: readonly BusinessFormField[] = [
+  'verification',
+  'verification_email',
+  'verification_social',
+  'certification_name',
+  'note',
+];
+
+/** The new-listing form, top to bottom: the place fields, then verification. */
+export const NEW_LISTING_FIELD_ORDER: readonly BusinessFormField[] = [...PLACE_FIELD_ORDER, ...VERIFICATION_FIELD_ORDER];
+
+/** The claim form, top to bottom: the place search, then verification. */
+export const CLAIM_FIELD_ORDER: readonly BusinessFormField[] = ['place', ...VERIFICATION_FIELD_ORDER];
 
 export type NewListingResult = { ok: true; args: SubmitNewPlaceArgs } | { ok: false; errors: BusinessFormErrors };
 

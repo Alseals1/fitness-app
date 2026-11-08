@@ -1,6 +1,8 @@
+import { firstErrorField } from './formErrors';
 import {
   emptyPlaceFields,
   emptyPlaceForm,
+  PLACE_FIELD_ORDER,
   PLACE_FORM_MESSAGES,
   PLACE_LIMITS,
   validatePlaceFields,
@@ -188,5 +190,37 @@ describe('validatePlaceFields', () => {
   it(`limits the email to ${PLACE_LIMITS.emailMax} characters`, () => {
     const long = validatePlaceFields({ ...fields, contact_email: 'x'.repeat(PLACE_LIMITS.emailMax) + '@example.com' });
     expect(!long.ok && long.errors.contact_email).toBe(PLACE_FORM_MESSAGES.emailInvalid);
+  });
+});
+
+describe('PLACE_FIELD_ORDER', () => {
+  /** Every field the check can flag: the empty form, plus a form where every value is bad. */
+  function everyErrorKey() {
+    const empty = validatePlaceFields({ ...emptyPlaceFields });
+    const bad = validatePlaceFields({
+      ...emptyPlaceFields,
+      description: 'x'.repeat(PLACE_LIMITS.descriptionMax + 1),
+      schedule: 'x'.repeat(PLACE_LIMITS.scheduleMax + 1),
+      website_url: 'example.com',
+      contact_phone: '1',
+      contact_email: 'not an email',
+      instagram_handle: 'not a handle!',
+    });
+    return new Set([...Object.keys(!empty.ok ? empty.errors : {}), ...Object.keys(!bad.ok ? bad.errors : {})]);
+  }
+
+  it('lists every field the check can flag', () => {
+    const keys = everyErrorKey();
+    expect(keys.size).toBe(PLACE_FIELD_ORDER.length);
+    for (const key of keys) expect(PLACE_FIELD_ORDER).toContain(key);
+  });
+
+  it('has no duplicates', () => {
+    expect(new Set(PLACE_FIELD_ORDER).size).toBe(PLACE_FIELD_ORDER.length);
+  });
+
+  it('puts category first on the empty form', () => {
+    const result = validatePlaceFields({ ...emptyPlaceFields });
+    expect(!result.ok && firstErrorField(result.errors, PLACE_FIELD_ORDER)).toBe('category');
   });
 });
