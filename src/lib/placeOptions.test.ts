@@ -4,6 +4,7 @@ import {
   AREA_OPTIONS,
   CATEGORY_LABELS,
   CATEGORY_OPTIONS,
+  placeMeta,
   PRICE_LABELS,
   PRICE_OPTIONS,
   TAG_LABELS,
@@ -42,4 +43,18 @@ describe.each(cases)('%s', (enumName, labels, options) => {
 it('labels the two-word values in plain words', () => {
   expect(CATEGORY_LABELS.run_club).toBe('Run club');
   expect(AREA_LABELS.mountain_brook).toBe('Mountain Brook');
+});
+
+describe('placeMeta', () => {
+  it('joins the category, area and price labels', () => {
+    expect(placeMeta({ category: 'studio', area: 'southside', price_range: 'moderate' })).toBe(
+      'Studio · Southside · Moderate',
+    );
+  });
+
+  it('keeps multi-word labels whole', () => {
+    expect(placeMeta({ category: 'run_club', area: 'mountain_brook', price_range: 'free' })).toBe(
+      'Run club · Mountain Brook · Free',
+    );
+  });
 });

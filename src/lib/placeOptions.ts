@@ -52,6 +52,18 @@ export function toOptions<T extends string>(values: readonly T[], labels: Record
   return values.map((value) => ({ value, label: labels[value] }));
 }
 
+/** The separator between the parts of a place's one-line summary. */
+export const META_SEPARATOR = ' · ';
+
+/** The "category · area · price" line, the same on result cards and in the admin queue. */
+export function placeMeta(place: {
+  category: Enums<'place_category'>;
+  area: Enums<'place_area'>;
+  price_range: Enums<'price_range'>;
+}): string {
+  return [CATEGORY_LABELS[place.category], AREA_LABELS[place.area], PRICE_LABELS[place.price_range]].join(META_SEPARATOR);
+}
+
 /** Options in the database's enum order, for pickers. */
 export const CATEGORY_OPTIONS = toOptions(Constants.public.Enums.place_category, CATEGORY_LABELS);
 export const AREA_OPTIONS = toOptions(Constants.public.Enums.place_area, AREA_LABELS);

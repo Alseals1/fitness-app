@@ -1,6 +1,6 @@
 import { copy } from './copy';
 import { rankPlaces, type RankedPlace } from './matching';
-import { AREA_LABELS, CATEGORY_LABELS, PRICE_LABELS } from './placeOptions';
+import { AREA_LABELS, CATEGORY_LABELS, META_SEPARATOR, placeMeta } from './placeOptions';
 import type { PublicPlace } from './places';
 import { isEmptyPreferences, type Preferences } from './preferences';
 import { stackedCardFontScale, stackedCardMaxWidth } from './theme';
@@ -35,8 +35,7 @@ export function resultsView(input: {
 
 /** The "category · area · price" line on a result card. */
 export function resultCardMeta(result: RankedPlace): string {
-  const { place } = result;
-  return [CATEGORY_LABELS[place.category], AREA_LABELS[place.area], PRICE_LABELS[place.price_range]].join(' · ');
+  return placeMeta(result.place);
 }
 
 /** What a screen reader says for a result card: one link with the name, the details and the reasons. */
@@ -53,7 +52,7 @@ export function resultCardText(result: RankedPlace): { category: string; facts: 
   const { place } = result;
   return {
     category: CATEGORY_LABELS[place.category],
-    facts: [AREA_LABELS[place.area], copy.results.priceShort[place.price_range]].join(' · '),
+    facts: [AREA_LABELS[place.area], copy.results.priceShort[place.price_range]].join(META_SEPARATOR),
   };
 }
 
