@@ -7,7 +7,12 @@ import { MotionProvider } from '../hooks/useMotion';
 import { useStackScreenOptions } from '../hooks/useStackScreenOptions';
 import { authReturnPath } from '../lib/authRouting';
 import { copy } from '../lib/copy';
+import { rootStackSettings } from '../lib/navigation';
 import { colors } from '../lib/theme';
+
+// A deep link or a refresh (for example a shared /place/<id>) keeps home below the opened screen,
+// so the header shows a back arrow to home instead of leaving no way into the app.
+export const unstable_settings = rootStackSettings;
 
 function RootNavigator() {
   const { session, isAdmin, ready } = useAuth();
@@ -29,6 +34,7 @@ function RootNavigator() {
   // The guards are a convenience: RLS and the admin_* functions are the real protection.
   // When a guard is false, Expo Router replaces the screen with the group's `redirectTo`:
   // sign-in and sign-up return to `returnTo` (home by default), admin goes to the anchor (index).
+  // The anchor is also what a deep-linked screen backs out to.
   return (
     <Stack screenOptions={screenOptions}>
       <Stack.Screen name="index" options={{ title: copy.appName }} />
