@@ -69,6 +69,16 @@ export async function updateShortlist(storage: KeyValueStorage, id: string, save
   return saveShortlist(storage, save ? addId(current, id) : removeId(current, id));
 }
 
+/**
+ * Puts a removed place back at `index` in the list as it is stored right now (an undo), so it
+ * keeps its place instead of moving to the front. Returns what was saved. A read or write error
+ * is rethrown and nothing is written, as in `updateShortlist`.
+ */
+export async function restoreShortlistId(storage: KeyValueStorage, id: string, index: number): Promise<string[]> {
+  const current = parseStoredShortlist(await storage.getItem(SHORTLIST_STORAGE_KEY));
+  return saveShortlist(storage, insertIdAt(current, id, index));
+}
+
 export function isSaved(ids: readonly string[], id: string): boolean {
   return ids.includes(id);
 }
@@ -80,6 +90,16 @@ export function isSaved(ids: readonly string[], id: string): boolean {
 export function addId(ids: readonly string[], id: string): string[] {
   if (!isPlaceId(id)) return [...ids];
   return [id, ...ids.filter((saved) => saved !== id)].slice(0, SHORTLIST_LIMIT);
+}
+
+/**
+ * Puts `id` at `index` (clamped to the list), for an undo. An id that is not a uuid or is
+ * already saved leaves the list unchanged. Past the limit the oldest is dropped.
+ */
+export function insertIdAt(ids: readonly string[], id: string, index: number): string[] {
+  if (!isPlaceId(id) || ids.includes(id)) return [...ids];
+  const at = Math.min(Math.max(Math.trunc(index), 0), ids.length);
+  return [...ids.slice(0, at), id, ...ids.slice(at)].slice(0, SHORTLIST_LIMIT);
 }
 
 export function removeId(ids: readonly string[], id: string): string[] {
