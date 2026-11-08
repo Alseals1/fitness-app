@@ -1,10 +1,11 @@
 import { Link, router } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '../components/Button';
 import { useAuth } from '../hooks/useAuth';
 import { usePreferences } from '../hooks/usePreferences';
+import { homeAccountView } from '../lib/adminCheck';
 import { copy } from '../lib/copy';
 import { shouldOpenOnboarding } from '../lib/onboarding';
 import { colors, spacing, typography } from '../lib/theme';
@@ -13,8 +14,19 @@ import { colors, spacing, typography } from '../lib/theme';
 let promptedThisLaunch = false;
 
 export default function HomeScreen() {
-  const { session, isAdmin, loading, signOut } = useAuth();
+  const { session, adminStatus, recheckAdmin, loading, signOut } = useAuth();
   const { preferences, loading: preferencesLoading } = usePreferences();
+  const [retrying, setRetrying] = useState(false);
+  const account = homeAccountView({ loading, signedIn: session !== null, status: adminStatus });
+
+  const onRetry = async () => {
+    setRetrying(true);
+    try {
+      await recheckAdmin();
+    } finally {
+      setRetrying(false);
+    }
+  };
 
   // First run: nothing saved yet. This never blocks browsing; the person can back out.
   useEffect(() => {
@@ -52,19 +64,35 @@ export default function HomeScreen() {
       </Link>
 
       {/* Browsing never needs an account: this only offers the sign-in for admins and businesses. */}
-      {loading ? null : !session ? (
+      {account === 'signIn' ? (
         <Link href="/sign-in" style={styles.link}>
           {copy.signIn}
         </Link>
-      ) : isAdmin ? (
+      ) : null}
+      {account === 'admin' ? (
         <Link href="/admin" style={styles.link}>
           {copy.admin}
         </Link>
-      ) : (
+      ) : null}
+      {account === 'signOut' ? (
         <View style={styles.account}>
           <Button label={copy.signOut} variant="secondary" onPress={signOut} />
         </View>
-      )}
+      ) : null}
+      {/* The admin check could not run (for example no network). Never shown as "not an admin". */}
+      {account === 'checkFailed' ? (
+        <View style={styles.account}>
+          <Text style={styles.notice} accessibilityLiveRegion="polite">
+            {copy.account.checkFailed}
+          </Text>
+          <Button
+            label={retrying ? copy.account.retrying : copy.account.retry}
+            disabled={retrying}
+            onPress={onRetry}
+          />
+          <Button label={copy.signOut} variant="secondary" onPress={signOut} />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -86,4 +114,5 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
   },
   account: { marginTop: spacing.xl, alignItems: 'center', gap: spacing.md },
+  notice: { ...typography.body, textAlign: 'center', color: colors.mutedText },
 });

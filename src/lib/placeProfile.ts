@@ -77,14 +77,22 @@ function contact(kind: ContactKind, shown: string, url: string | null): ContactL
   };
 }
 
-/** `tel:` with one optional leading `+` and the digits only. */
+/** The leading part of a phone value: digits, spaces and `+ ( ) . -` only. */
+const PHONE_LEADING_PART = /^[\d\s+().-]*/;
+const PHONE_DIGITS_MAX = 15; // E.164: the longest phone number
+
+/**
+ * `tel:` with one optional leading `+` and the digits of the leading phone part only, so an
+ * extension or a second number is never dialled.
+ */
 export function phoneLink(raw: string | null | undefined): ContactLink | undefined {
   const value = text(raw);
   if (!value) return undefined;
-  const digits = value.replace(/\D/g, '');
+  const leading = value.match(PHONE_LEADING_PART)?.[0] ?? '';
+  const digits = leading.replace(/\D/g, '');
   const plus = value.startsWith('+') ? '+' : '';
-  const url = digits.length >= PLACE_LIMITS.phoneMin ? `tel:${plus}${digits}` : null;
-  return contact('phone', value, url);
+  const dialable = digits.length >= PLACE_LIMITS.phoneMin && digits.length <= PHONE_DIGITS_MAX;
+  return contact('phone', value, dialable ? `tel:${plus}${digits}` : null);
 }
 
 export function emailLink(raw: string | null | undefined): ContactLink | undefined {
