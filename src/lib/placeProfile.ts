@@ -15,8 +15,17 @@ export type PlaceLoad =
 
 export type ContactKind = 'phone' | 'email' | 'website' | 'instagram';
 
-/** One contact row. `url` is null when the value can't be made into a safe link: it is then shown as plain text. */
-export type ContactLink = { kind: ContactKind; text: string; url: string | null; accessibilityLabel: string };
+/**
+ * One contact row. `url` is null when the value can't be made into a safe link: it is then shown
+ * as plain text. `kindLabel` is the small label above the value ("Phone", "Website", …).
+ */
+export type ContactLink = {
+  kind: ContactKind;
+  kindLabel: string;
+  text: string;
+  url: string | null;
+  accessibilityLabel: string;
+};
 
 export type PlaceProfile = {
   id: string;
@@ -32,6 +41,9 @@ export type PlaceProfile = {
   certified?: string;
   safetyNote?: string;
 };
+
+/** One row of the profile's "At a glance" card: a label above its value. */
+export type ProfileFact = { key: 'area' | 'price' | 'schedule'; label: string; value: string };
 
 export type PlaceProfileView =
   | { kind: 'loading' }
@@ -56,7 +68,13 @@ export function text(value: string | null | undefined): string | undefined {
 }
 
 function contact(kind: ContactKind, shown: string, url: string | null): ContactLink {
-  return { kind, text: shown, url, accessibilityLabel: copy.place.contactLabels[kind](shown) };
+  return {
+    kind,
+    kindLabel: copy.place.contactKinds[kind],
+    text: shown,
+    url,
+    accessibilityLabel: copy.place.contactLabels[kind](shown),
+  };
 }
 
 /** `tel:` with one optional leading `+` and the digits only. */
@@ -122,6 +140,19 @@ export function toPlaceProfile(place: PublicPlace): PlaceProfile {
   }
   if (place.category === 'trainer') profile.safetyNote = copy.place.trainerSafety;
   return profile;
+}
+
+/**
+ * The "At a glance" rows, in order: part of town, price range, then the schedule when there is
+ * one. Part of town and price range always show, so a place never hides them.
+ */
+export function profileFacts(profile: PlaceProfile): ProfileFact[] {
+  const facts: ProfileFact[] = [
+    { key: 'area', label: copy.place.area, value: profile.area },
+    { key: 'price', label: copy.place.price, value: profile.price },
+  ];
+  if (profile.schedule) facts.push({ key: 'schedule', label: copy.place.schedule, value: profile.schedule });
+  return facts;
 }
 
 /**

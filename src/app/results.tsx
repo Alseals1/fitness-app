@@ -13,7 +13,7 @@ import { entranceFor } from '../lib/motion';
 import { fetchApprovedPlaces } from '../lib/places';
 import { resultsSummary, resultsView, type PlacesLoad } from '../lib/results';
 import { supabase } from '../lib/supabase';
-import { colors, radius, spacing, textLinkStyle, typography } from '../lib/theme';
+import { colors, noticeStyle, spacing, textLinkStyle, typography } from '../lib/theme';
 
 /** Approved places, best fit first. Open to everyone: no account needed. */
 export default function ResultsScreen() {
@@ -86,7 +86,7 @@ export default function ResultsScreen() {
         ListHeaderComponent={
           <View style={styles.header}>
             {view.hasPreferences ? null : (
-              <View style={styles.notice}>
+              <View style={noticeStyle}>
                 <Text style={styles.noticeText}>{copy.results.noPreferences}</Text>
                 <Link href="/onboarding" accessibilityRole="link" style={textLinkStyle}>
                   {copy.onboarding.setLink}
@@ -140,13 +140,6 @@ const styles = StyleSheet.create({
   centered: { alignItems: 'center', justifyContent: 'center', padding: spacing.xl, gap: spacing.md },
   list: { padding: spacing.lg, gap: spacing.md },
   header: { gap: spacing.sm },
-  notice: {
-    backgroundColor: colors.primarySoft,
-    borderRadius: radius.lg,
-    borderCurve: 'continuous',
-    padding: spacing.lg,
-    gap: spacing.xs,
-  },
   noticeText: { ...typography.body, color: colors.text },
   links: { flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing.lg },
   summary: { ...typography.label, color: colors.mutedText, marginTop: spacing.sm },

@@ -202,6 +202,18 @@ export const cardStyle: ViewStyle = {
   padding: spacing.lg,
 };
 
+/**
+ * A soft teal notice: a short message the user should read before acting (the results screen's
+ * "no preferences" note, the trainer safety note). Its text is `colors.text` (checked on `primarySoft`).
+ */
+export const noticeStyle: ViewStyle = {
+  backgroundColor: colors.primarySoft,
+  borderRadius: radius.lg,
+  borderCurve: 'continuous',
+  padding: spacing.lg,
+  gap: spacing.xs,
+};
+
 /** The keyboard and switch focus ring: drawn as an outline, so it never changes text contrast. */
 export const focusRingStyle: ViewStyle = {
   outlineColor: colors.focusRing,
