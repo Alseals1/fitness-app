@@ -68,20 +68,46 @@ export function ResultListSkeleton() {
   );
 }
 
-/** Stands in for a place profile: heading, meta, the save button and three sections. */
+/** How many "At a glance" rows and contact rows a loading profile shows. */
+const skeletonFactCount = 3;
+const skeletonContactCount = 2;
+
+/**
+ * Stands in for a place profile, shaped like it: the category, the name and Save, the
+ * "At a glance" card, then a section label over the contact card.
+ */
 export function PlaceProfileSkeleton() {
   return (
     <SkeletonGroup style={styles.profile}>
-      <SkeletonBlock width="70%" height={typography.heading.lineHeight} />
-      <SkeletonBlock width="45%" height={typography.body.lineHeight} />
-      <SkeletonBlock width={minTouchTarget} height={minTouchTarget} radius={radius.md} />
-      {Array.from({ length: 3 }, (_, index) => (
-        <View key={index} style={styles.section}>
-          <SkeletonBlock width="25%" height={typography.label.lineHeight} />
-          <SkeletonBlock width="90%" height={typography.body.lineHeight} />
-          <SkeletonBlock width="60%" height={typography.body.lineHeight} />
+      <View style={styles.profileHeader}>
+        <SkeletonBlock width="25%" height={typography.label.lineHeight} />
+        <SkeletonBlock width="70%" height={typography.heading.lineHeight} />
+        <View style={styles.save}>
+          <SkeletonBlock width={minTouchTarget} height={minTouchTarget} radius={radius.md} />
         </View>
-      ))}
+      </View>
+      <View style={styles.section}>
+        <SkeletonBlock width="25%" height={typography.label.lineHeight} />
+        <View style={styles.factCard}>
+          {Array.from({ length: skeletonFactCount }, (_, index) => (
+            <View key={index} style={styles.fact}>
+              <SkeletonBlock width="30%" height={typography.label.lineHeight} />
+              <SkeletonBlock width="55%" height={typography.body.lineHeight} />
+            </View>
+          ))}
+        </View>
+      </View>
+      <View style={styles.section}>
+        <SkeletonBlock width="30%" height={typography.label.lineHeight} />
+        <View style={styles.contactCard}>
+          {Array.from({ length: skeletonContactCount }, (_, index) => (
+            <View key={index} style={styles.contact}>
+              <SkeletonBlock width="20%" height={typography.label.lineHeight} />
+              <SkeletonBlock width="60%" height={typography.bodyStrong.lineHeight} />
+            </View>
+          ))}
+        </View>
+      </View>
     </SkeletonGroup>
   );
 }
@@ -94,6 +120,13 @@ const styles = StyleSheet.create({
   cardText: { flex: 1, gap: spacing.xs },
   pills: { flexDirection: 'row', gap: spacing.xs, marginTop: spacing.sm },
   cue: { marginTop: spacing.sm },
-  profile: { padding: spacing.lg, gap: spacing.lg },
-  section: { gap: spacing.xs },
+  // The same padding and gaps as the profile screen, its sections and its cards.
+  profile: { padding: spacing.lg, gap: spacing.xl },
+  profileHeader: { gap: spacing.xs },
+  save: { marginTop: spacing.sm },
+  section: { gap: spacing.sm },
+  factCard: { ...cardStyle, paddingVertical: spacing.xs },
+  fact: { paddingVertical: spacing.md, gap: spacing.xs },
+  contactCard: { ...cardStyle, padding: spacing.xs },
+  contact: { paddingVertical: spacing.sm, paddingHorizontal: spacing.md, gap: spacing.xs },
 });
