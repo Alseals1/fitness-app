@@ -10,6 +10,7 @@ import {
 import {
   createFieldRegistry,
   firstErrorField,
+  focusBeforeScroll,
   focusMethod,
   scrollOffsetFor,
   scrollTargetField,
@@ -57,12 +58,15 @@ export function useScrollToFirstError<K extends string>(order: readonly K[]) {
     let active = true;
     target.container.measureLayout(content, (_x, y) => {
       if (!active) return;
-      scroll.scrollTo({ y: scrollOffsetFor(y), animated: !reducedRef.current });
+      const scrollThere = () => scroll.scrollTo({ y: scrollOffsetFor(y), animated: !reducedRef.current });
       const method = focusMethod({ input: target.input !== undefined, chip: target.chip !== undefined }, Platform.OS);
+      const before = focusBeforeScroll(Platform.OS);
+      if (!before) scrollThere();
       if (method === 'input') target.input?.focus();
       else if (method === 'web-focus') target.chip?.focus();
       // Not on web: react-native-web has no sendAccessibilityEvent.
       else if (method === 'a11y-focus' && target.chip) AccessibilityInfo.sendAccessibilityEvent(target.chip, 'focus');
+      if (before) scrollThere();
     });
     return () => {
       active = false;

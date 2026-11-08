@@ -48,6 +48,15 @@ export function focusMethod(target: { input: boolean; chip: boolean }, os: typeo
   return 'none';
 }
 
+/**
+ * Whether to move focus before scrolling. On web a DOM `focus()` scrolls the element into view
+ * itself, and in Chrome that cuts an animated scroll short, so focus goes first and the form's
+ * own scroll comes after. Elsewhere the form scrolls first, then moves focus.
+ */
+export function focusBeforeScroll(os: typeof Platform.OS): boolean {
+  return os === 'web';
+}
+
 /** Ref callbacks for one field. React 19 calls the returned function when the node goes away. */
 export type FieldRegistration<V, I> = {
   /** The field's outer view: what the form scrolls to. */

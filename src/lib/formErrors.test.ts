@@ -1,4 +1,11 @@
-import { createFieldRegistry, firstErrorField, focusMethod, scrollOffsetFor, scrollTargetField } from './formErrors';
+import {
+  createFieldRegistry,
+  firstErrorField,
+  focusBeforeScroll,
+  focusMethod,
+  scrollOffsetFor,
+  scrollTargetField,
+} from './formErrors';
 import { spacing } from './theme';
 
 type Key = 'a' | 'b' | 'c';
@@ -67,6 +74,17 @@ describe('focusMethod', () => {
 
   it('does nothing without a target', () => {
     expect(focusMethod({ input: false, chip: false }, 'web')).toBe('none');
+  });
+});
+
+describe('focusBeforeScroll', () => {
+  it('focuses first on web, so the browser does not cut the scroll short', () => {
+    expect(focusBeforeScroll('web')).toBe(true);
+  });
+
+  it('scrolls first on iOS and Android', () => {
+    expect(focusBeforeScroll('ios')).toBe(false);
+    expect(focusBeforeScroll('android')).toBe(false);
   });
 });
 
