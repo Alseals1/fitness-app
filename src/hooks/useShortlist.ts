@@ -3,7 +3,15 @@ import { useCallback, useRef, useState } from 'react';
 
 import { copy } from '../lib/copy';
 import { deviceStorage } from '../lib/deviceStorage';
-import { addId, isSaved as isSavedIn, loadShortlist, removeId, updateShortlist } from '../lib/shortlist';
+import {
+  addId,
+  insertIdAt,
+  isSaved as isSavedIn,
+  loadShortlist,
+  removeId,
+  restoreShortlistId,
+  updateShortlist,
+} from '../lib/shortlist';
 
 /**
  * Every shortlist read and write, in order, shared by all screens. A load waits for the writes
@@ -20,6 +28,16 @@ export type Shortlist = {
   isSaved: (id: string) => boolean;
   /** Saves or removes a place. Ignored until the first load is done: returns false when it was. */
   toggle: (id: string) => boolean;
+  /**
+   * Removes a saved place. Returns its index in the list before the removal (for an undo), or
+   * null when nothing changed: the first load is not done, or the place is not saved.
+   */
+  remove: (id: string) => number | null;
+  /**
+   * Puts a removed place back at `index` (an undo), not at the front. A place saved again by then
+   * stays where it is. Ignored until the first load is done: returns false when it was.
+   */
+  restore: (id: string, index: number) => boolean;
   /** Set when the last change could not be saved; the list is then back to what is stored. */
   saveError: string | null;
 };
@@ -61,13 +79,10 @@ export function useShortlist(): Shortlist {
     }, [apply]),
   );
 
-  const toggle = useCallback(
-    (id: string) => {
-      // Before the first load the screen does not know what is saved, so a tap could undo it.
-      if (loadingRef.current) return false;
-      // Decide from what the button shows, then apply that to the stored list in the chain.
-      const save = !isSavedIn(idsRef.current, id);
-      apply(save ? addId(idsRef.current, id) : removeId(idsRef.current, id));
+  /** Shows `next` at once, then runs `write` in the chain; on failure, shows what is stored and the error. */
+  const commit = useCallback(
+    (next: string[], write: () => Promise<string[]>) => {
+      apply(next);
       setSaveError(null);
       pendingRef.current += 1;
 
@@ -76,19 +91,50 @@ export function useShortlist(): Shortlist {
         pendingRef.current -= 1;
         if (pendingRef.current === 0) apply(storedIds);
       };
-      writeChain = writeChain
-        .then(() => updateShortlist(deviceStorage, id, save))
-        .then(settle, async () => {
-          setSaveError(copy.shortlist.saveFailed);
-          // Put the list back to what is stored.
-          settle(await loadShortlist(deviceStorage));
-        });
-      return true;
+      writeChain = writeChain.then(write).then(settle, async () => {
+        setSaveError(copy.shortlist.saveFailed);
+        // Put the list back to what is stored.
+        settle(await loadShortlist(deviceStorage));
+      });
     },
     [apply],
   );
 
+  const toggle = useCallback(
+    (id: string) => {
+      // Before the first load the screen does not know what is saved, so a tap could undo it.
+      if (loadingRef.current) return false;
+      // Decide from what the button shows, then apply that to the stored list in the chain.
+      const save = !isSavedIn(idsRef.current, id);
+      commit(save ? addId(idsRef.current, id) : removeId(idsRef.current, id), () =>
+        updateShortlist(deviceStorage, id, save),
+      );
+      return true;
+    },
+    [commit],
+  );
+
+  const remove = useCallback(
+    (id: string) => {
+      if (loadingRef.current) return null;
+      const index = idsRef.current.indexOf(id);
+      if (index === -1) return null;
+      commit(removeId(idsRef.current, id), () => updateShortlist(deviceStorage, id, false));
+      return index;
+    },
+    [commit],
+  );
+
+  const restore = useCallback(
+    (id: string, index: number) => {
+      if (loadingRef.current) return false;
+      commit(insertIdAt(idsRef.current, id, index), () => restoreShortlistId(deviceStorage, id, index));
+      return true;
+    },
+    [commit],
+  );
+
   const isSaved = useCallback((id: string) => isSavedIn(ids, id), [ids]);
 
-  return { ids, loading, isSaved, toggle, saveError };
+  return { ids, loading, isSaved, toggle, remove, restore, saveError };
 }
