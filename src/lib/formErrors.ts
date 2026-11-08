@@ -47,3 +47,52 @@ export function focusMethod(target: { input: boolean; chip: boolean }, os: typeo
   if (target.chip) return os === 'web' ? 'web-focus' : 'a11y-focus';
   return 'none';
 }
+
+/** Ref callbacks for one field. React 19 calls the returned function when the node goes away. */
+export type FieldRegistration<V, I> = {
+  /** The field's outer view: what the form scrolls to. */
+  container: (node: V | null) => (() => void) | undefined;
+  /** A text field's input: takes keyboard focus. */
+  input: (node: I | null) => (() => void) | undefined;
+  /** A chip group's first chip: takes focus when the group has no input. */
+  chip: (node: V | null) => (() => void) | undefined;
+};
+
+export type FieldTarget<V, I> = { container?: V; input?: I; chip?: V };
+
+/** Keeps a node under a key while it is mounted. Removing checks the node, so a newer one is kept. */
+function attach<T>(nodes: Map<string, T>, key: string) {
+  return (node: T | null) => {
+    if (node === null) return undefined;
+    nodes.set(key, node);
+    return () => {
+      if (nodes.get(key) === node) nodes.delete(key);
+    };
+  };
+}
+
+/**
+ * Where a form's fields are, by key. `register(key)` returns the same callbacks every time for a
+ * key, so React does not detach and re-attach them on each render.
+ */
+export function createFieldRegistry<V, I>() {
+  const containers = new Map<string, V>();
+  const inputs = new Map<string, I>();
+  const chips = new Map<string, V>();
+  const registrations = new Map<string, FieldRegistration<V, I>>();
+
+  function register(key: string): FieldRegistration<V, I> {
+    let registration = registrations.get(key);
+    if (!registration) {
+      registration = { container: attach(containers, key), input: attach(inputs, key), chip: attach(chips, key) };
+      registrations.set(key, registration);
+    }
+    return registration;
+  }
+
+  function target(key: string): FieldTarget<V, I> {
+    return { container: containers.get(key), input: inputs.get(key), chip: chips.get(key) };
+  }
+
+  return { register, target };
+}

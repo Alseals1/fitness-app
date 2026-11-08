@@ -1,4 +1,4 @@
-import { firstErrorField, focusMethod, scrollOffsetFor, scrollTargetField } from './formErrors';
+import { createFieldRegistry, firstErrorField, focusMethod, scrollOffsetFor, scrollTargetField } from './formErrors';
 import { spacing } from './theme';
 
 type Key = 'a' | 'b' | 'c';
@@ -67,5 +67,48 @@ describe('focusMethod', () => {
 
   it('does nothing without a target', () => {
     expect(focusMethod({ input: false, chip: false }, 'web')).toBe('none');
+  });
+});
+
+describe('createFieldRegistry', () => {
+  type Node = { id: string };
+
+  it('returns the same callbacks for a key on every call', () => {
+    const { register } = createFieldRegistry<Node, Node>();
+    expect(register('name')).toBe(register('name'));
+    expect(register('name')).not.toBe(register('area'));
+  });
+
+  it('stores each part of a field and forgets it when the node goes away', () => {
+    const { register, target } = createFieldRegistry<Node, Node>();
+    const container = { id: 'container' };
+    const input = { id: 'input' };
+    const removeContainer = register('name').container(container);
+    register('name').input(input);
+    expect(target('name')).toEqual({ container, input, chip: undefined });
+    removeContainer?.();
+    expect(target('name').container).toBeUndefined();
+    expect(target('name').input).toBe(input);
+  });
+
+  it('keeps a newer node when an older one is removed late', () => {
+    const { register, target } = createFieldRegistry<Node, Node>();
+    const older = { id: 'older' };
+    const newer = { id: 'newer' };
+    const removeOlder = register('category').chip(older);
+    register('category').chip(newer);
+    removeOlder?.();
+    expect(target('category').chip).toBe(newer);
+  });
+
+  it('ignores a null node', () => {
+    const { register, target } = createFieldRegistry<Node, Node>();
+    expect(register('note').input(null)).toBeUndefined();
+    expect(target('note').input).toBeUndefined();
+  });
+
+  it('has nothing for a field that never registered', () => {
+    const { target } = createFieldRegistry<Node, Node>();
+    expect(target('place')).toEqual({ container: undefined, input: undefined, chip: undefined });
   });
 });

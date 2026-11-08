@@ -4,6 +4,7 @@ import { Text, TextInput } from 'react-native';
 import { copy } from '../lib/copy';
 import { PLACE_LIMITS, type PlaceFieldValues, type PlaceFormErrors } from '../lib/placeForm';
 import { AREA_OPTIONS, CATEGORY_OPTIONS, PRICE_OPTIONS, TAG_OPTIONS } from '../lib/placeOptions';
+import type { FieldRegister } from '../hooks/useScrollToFirstError';
 import { FormField, formStyles } from './FormField';
 import { OptionChips } from './OptionChips';
 
@@ -65,18 +66,24 @@ type Props = {
   errors: PlaceFormErrors;
   onChange: <K extends keyof PlaceFieldValues>(key: K, value: PlaceFieldValues[K]) => void;
   disabled?: boolean;
+  /** Lets the form scroll to and focus a field with an error. Tags never have one. */
+  register?: FieldRegister;
 };
 
 /** The place fields: category, part of town, price, the text fields and tags. Used by the admin and business forms. */
-export function PlaceFields({ values, errors, onChange, disabled = false }: Props) {
+export function PlaceFields({ values, errors, onChange, disabled = false, register }: Props) {
+  const category = register?.('category');
+  const area = register?.('area');
+  const price = register?.('price_range');
   function toggleTag(tag: PlaceFieldValues['tags'][number]) {
     onChange('tags', values.tags.includes(tag) ? values.tags.filter((t) => t !== tag) : [...values.tags, tag]);
   }
 
   return (
     <>
-      <FormField label={copy.newPlace.category} error={errors.category}>
+      <FormField ref={category?.container} label={copy.newPlace.category} error={errors.category}>
         <OptionChips
+          firstChipRef={category?.chip}
           options={CATEGORY_OPTIONS}
           selected={values.category ? [values.category] : []}
           onToggle={(value) => onChange('category', value)}
@@ -84,8 +91,9 @@ export function PlaceFields({ values, errors, onChange, disabled = false }: Prop
           accessibilityLabel={copy.newPlace.category}
         />
       </FormField>
-      <FormField label={copy.newPlace.area} error={errors.area}>
+      <FormField ref={area?.container} label={copy.newPlace.area} error={errors.area}>
         <OptionChips
+          firstChipRef={area?.chip}
           options={AREA_OPTIONS}
           selected={values.area ? [values.area] : []}
           onToggle={(value) => onChange('area', value)}
@@ -93,8 +101,9 @@ export function PlaceFields({ values, errors, onChange, disabled = false }: Prop
           accessibilityLabel={copy.newPlace.area}
         />
       </FormField>
-      <FormField label={copy.newPlace.price} error={errors.price_range}>
+      <FormField ref={price?.container} label={copy.newPlace.price} error={errors.price_range}>
         <OptionChips
+          firstChipRef={price?.chip}
           options={PRICE_OPTIONS}
           selected={values.price_range ? [values.price_range] : []}
           onToggle={(value) => onChange('price_range', value)}
@@ -103,18 +112,22 @@ export function PlaceFields({ values, errors, onChange, disabled = false }: Prop
         />
       </FormField>
 
-      {TEXT_FIELDS.map(({ field, label, input }) => (
-        <FormField key={field} label={label} error={errors[field]}>
-          <TextInput
-            {...input}
-            style={[formStyles.input, input.multiline && formStyles.multiline, errors[field] && formStyles.inputError]}
-            value={values[field]}
-            onChangeText={(text) => onChange(field, text)}
-            editable={!disabled}
-            accessibilityLabel={label}
-          />
-        </FormField>
-      ))}
+      {TEXT_FIELDS.map(({ field, label, input }) => {
+        const registration = register?.(field);
+        return (
+          <FormField key={field} ref={registration?.container} label={label} error={errors[field]}>
+            <TextInput
+              {...input}
+              ref={registration?.input}
+              style={[formStyles.input, input.multiline && formStyles.multiline, errors[field] && formStyles.inputError]}
+              value={values[field]}
+              onChangeText={(text) => onChange(field, text)}
+              editable={!disabled}
+              accessibilityLabel={label}
+            />
+          </FormField>
+        );
+      })}
       <Text style={[formStyles.hint, errors.contact && formStyles.errorText]}>
         {errors.contact ?? copy.newPlace.contactHint}
       </Text>

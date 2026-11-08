@@ -2,6 +2,7 @@ import { Text, TextInput } from 'react-native';
 
 import { VERIFICATION_LIMITS, type VerificationErrors, type VerificationValues } from '../lib/businessForm';
 import { copy } from '../lib/copy';
+import type { FieldRegister } from '../hooks/useScrollToFirstError';
 import { FormField, formStyles } from './FormField';
 
 type Props = {
@@ -11,16 +12,23 @@ type Props = {
   /** Only for a trainer. */
   showCertification: boolean;
   disabled?: boolean;
+  /** Lets the form scroll to and focus a field with an error. */
+  register?: FieldRegister;
 };
 
 /** The private details sent with a new listing or a claim. Only an admin sees them. */
-export function VerificationFields({ values, errors, onChange, showCertification, disabled = false }: Props) {
+export function VerificationFields({ values, errors, onChange, showCertification, disabled = false, register }: Props) {
+  const email = register?.('verification_email');
+  const social = register?.('verification_social');
+  const certification = register?.('certification_name');
+  const note = register?.('note');
   return (
     <>
       <Text style={formStyles.sectionTitle}>{copy.business.verificationTitle}</Text>
       <Text style={formStyles.hint}>{copy.business.verificationHint}</Text>
-      <FormField label={copy.business.verificationEmail} error={errors.verification_email}>
+      <FormField ref={email?.container} label={copy.business.verificationEmail} error={errors.verification_email}>
         <TextInput
+          ref={email?.input}
           style={[formStyles.input, errors.verification_email && formStyles.inputError]}
           value={values.verification_email}
           onChangeText={(text) => onChange('verification_email', text)}
@@ -34,8 +42,9 @@ export function VerificationFields({ values, errors, onChange, showCertification
           accessibilityLabel={copy.business.verificationEmail}
         />
       </FormField>
-      <FormField label={copy.business.verificationSocial} error={errors.verification_social}>
+      <FormField ref={social?.container} label={copy.business.verificationSocial} error={errors.verification_social}>
         <TextInput
+          ref={social?.input}
           style={[formStyles.input, errors.verification_social && formStyles.inputError]}
           value={values.verification_social}
           onChangeText={(text) => onChange('verification_social', text)}
@@ -51,8 +60,9 @@ export function VerificationFields({ values, errors, onChange, showCertification
         {errors.verification ?? copy.business.verificationRequiredHint}
       </Text>
       {showCertification ? (
-        <FormField label={copy.business.certification} error={errors.certification_name}>
+        <FormField ref={certification?.container} label={copy.business.certification} error={errors.certification_name}>
           <TextInput
+            ref={certification?.input}
             style={[formStyles.input, errors.certification_name && formStyles.inputError]}
             value={values.certification_name}
             onChangeText={(text) => onChange('certification_name', text)}
@@ -65,8 +75,9 @@ export function VerificationFields({ values, errors, onChange, showCertification
           <Text style={formStyles.hint}>{copy.business.certificationHint}</Text>
         </FormField>
       ) : null}
-      <FormField label={copy.business.note} error={errors.note}>
+      <FormField ref={note?.container} label={copy.business.note} error={errors.note}>
         <TextInput
+          ref={note?.input}
           style={[formStyles.input, formStyles.multiline, errors.note && formStyles.inputError]}
           value={values.note}
           onChangeText={(text) => onChange('note', text)}
