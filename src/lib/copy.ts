@@ -15,6 +15,12 @@ export const copy = {
   verified: 'Verified',
   certified: 'Certified',
   loading: 'Loading…',
+  /** The sign-in screen. */
+  signInScreen: {
+    title: 'Welcome back',
+    intro: "For businesses and our review team. You don't need an account to browse places.",
+    browseLink: 'Browse places without an account',
+  },
   signUp: {
     title: 'Create an account',
     intro: "For businesses that want to list or claim a place. You don't need an account to browse.",
