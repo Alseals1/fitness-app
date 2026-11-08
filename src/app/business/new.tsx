@@ -15,6 +15,7 @@ import {
 } from '../../lib/businessForm';
 import { copy } from '../../lib/copy';
 import { emptyPlaceFields, type PlaceFieldValues } from '../../lib/placeForm';
+import { markJustSent } from '../../lib/submitted';
 import { supabase } from '../../lib/supabase';
 import { colors, spacing } from '../../lib/theme';
 
@@ -46,6 +47,7 @@ export default function NewListingScreen() {
     setSending(false);
     if (result.ok) {
       // Replace, so Back never returns to the filled form.
+      markJustSent();
       router.replace('/business/submitted');
     } else {
       setServerError(result.message);
