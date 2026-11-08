@@ -1,4 +1,13 @@
-import { celebrationFor, entranceFor, pressScale, saveFeedback, skeletonPulses, stackAnimation } from './motion';
+import {
+  celebrationFor,
+  entranceFor,
+  exitFor,
+  pressScale,
+  rowEntrance,
+  saveFeedback,
+  skeletonPulses,
+  stackAnimation,
+} from './motion';
 import { motion } from './theme';
 
 describe('pressScale', () => {
@@ -125,5 +134,43 @@ describe('celebrationFor', () => {
 
   it('closes after 1.4 s when no screen reader runs', () => {
     expect(celebrationFor({ reduced: false, screenReader: false }).autoCloseMs).toBe(1400);
+  });
+});
+
+describe('rowEntrance', () => {
+  it('staggers the rows on the first paint', () => {
+    expect(rowEntrance({ index: 2, reduced: false, firstPaint: true, restored: false })).toEqual(
+      entranceFor({ index: 2, reduced: false, animate: true }),
+    );
+  });
+
+  it('brings a restored row in at once, with no stagger', () => {
+    expect(rowEntrance({ index: 4, reduced: false, firstPaint: false, restored: true })).toEqual({
+      kind: 'rise',
+      duration: motion.duration.base,
+      delay: 0,
+      offsetY: motion.entrance.offsetY,
+    });
+  });
+
+  it('shows other rows that mount later with no entrance', () => {
+    expect(rowEntrance({ index: 1, reduced: false, firstPaint: false, restored: false })).toEqual({ kind: 'none' });
+  });
+
+  it('only fades a restored row under Reduced Motion', () => {
+    expect(rowEntrance({ index: 3, reduced: true, firstPaint: false, restored: true })).toEqual({
+      kind: 'fade',
+      duration: motion.duration.fast,
+    });
+  });
+});
+
+describe('exitFor', () => {
+  it('fades and collapses a removed row', () => {
+    expect(exitFor({ reduced: false })).toEqual({ kind: 'collapse', duration: motion.duration.base });
+  });
+
+  it('only fades, quicker, under Reduced Motion', () => {
+    expect(exitFor({ reduced: true })).toEqual({ kind: 'fade', duration: motion.duration.fast });
   });
 });

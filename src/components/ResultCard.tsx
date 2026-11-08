@@ -12,6 +12,7 @@ import type { RankedPlace } from '../lib/matching';
 import { pressScale, type Entrance } from '../lib/motion';
 import { resultCardAccessibilityLabel, resultCardLayout, resultCardText } from '../lib/results';
 import { cardStyle, colors, radius, spacing, typography } from '../lib/theme';
+import { Button } from './Button';
 import { SaveButton } from './SaveButton';
 
 type Props = {
@@ -21,6 +22,11 @@ type Props = {
   onToggleSave: (id: string) => boolean;
   /** How the card first appears: see `entranceFor`. */
   entrance: Entrance;
+  /**
+   * The card's button. `save` (the default): the Save / Saved toggle. `remove`: an outlined
+   * Remove button, for the shortlist, where every card is already saved. Both call `onToggleSave`.
+   */
+  action?: 'save' | 'remove';
 };
 
 /**
@@ -32,7 +38,7 @@ type Props = {
  * the text can wrap.
  * Pressing the link scales the whole card.
  */
-export function ResultCard({ result, saved, onToggleSave, entrance }: Props) {
+export function ResultCard({ result, saved, onToggleSave, entrance, action = 'save' }: Props) {
   const { place, reasons } = result;
   const { category, facts } = resultCardText(result);
   const { fontScale, width } = useWindowDimensions();
@@ -92,7 +98,16 @@ export function ResultCard({ result, saved, onToggleSave, entrance }: Props) {
           </Pressable>
         </Link>
         <View style={stacked ? styles.saveStacked : undefined}>
-          <SaveButton name={place.name} saved={saved} onPress={() => onToggleSave(place.id)} />
+          {action === 'remove' ? (
+            <Button
+              label={copy.shortlist.remove}
+              variant="secondary"
+              accessibilityLabel={copy.shortlist.removeLabel(place.name)}
+              onPress={() => onToggleSave(place.id)}
+            />
+          ) : (
+            <SaveButton name={place.name} saved={saved} onPress={() => onToggleSave(place.id)} />
+          )}
         </View>
       </Animated.View>
     </Animated.View>

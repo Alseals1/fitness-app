@@ -15,6 +15,8 @@ type Props = {
   /** primary: filled. secondary: outlined. danger: outlined in red. */
   variant?: 'primary' | 'secondary' | 'danger';
   accessibilityHint?: string;
+  /** What a screen reader says, when the visible label needs more context (for example the place's name). */
+  accessibilityLabel?: string;
 };
 
 /**
@@ -22,12 +24,20 @@ type Props = {
  * opacity. The visuals sit on an inner animated view, so a press scales and eases its colour on the
  * UI thread; the `Pressable` keeps the touch target and the focus ring.
  */
-export function Button({ label, onPress, disabled = false, variant = 'primary', accessibilityHint }: Props) {
+export function Button({
+  label,
+  onPress,
+  disabled = false,
+  variant = 'primary',
+  accessibilityHint,
+  accessibilityLabel,
+}: Props) {
   const { focused, onFocus, onBlur } = useFocusState();
   const { reduced } = useMotion();
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       accessibilityState={{ disabled }}
       accessibilityHint={accessibilityHint}
       disabled={disabled}

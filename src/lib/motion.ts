@@ -33,6 +33,36 @@ export function entranceFor({ index, reduced, animate }: { index: number; reduce
 }
 
 /**
+ * A shortlist row's entrance. Rows on the list's first paint keep the staggered entrance. A row
+ * put back by Undo enters at once (no stagger), so it is clear which one came back. Any other row
+ * that mounts later (scrolling, a refocus) just appears.
+ */
+export function rowEntrance({
+  index,
+  reduced,
+  firstPaint,
+  restored,
+}: {
+  index: number;
+  reduced: boolean;
+  firstPaint: boolean;
+  restored: boolean;
+}): Entrance {
+  return entranceFor({ index: restored ? 0 : index, reduced, animate: firstPaint || restored });
+}
+
+/** How a removed list row leaves. */
+export type Exit = { kind: 'fade'; duration: number } | { kind: 'collapse'; duration: number };
+
+/**
+ * A removed row's exit: it fades while its height collapses, so the rows below slide up gently.
+ * Under Reduced Motion it only fades, quicker, and the rows below then move up with no animation.
+ */
+export function exitFor({ reduced }: { reduced: boolean }): Exit {
+  return reduced ? { kind: 'fade', duration: motion.duration.fast } : { kind: 'collapse', duration: motion.duration.base };
+}
+
+/**
  * The feedback for a change of a place's saved state. Only a save the user just pressed for gets
  * feedback: a bloom (not under Reduced Motion) and a haptic (always). Un-saving and changes the
  * user didn't press for (a shortlist load, a refocus) stay quiet.

@@ -245,8 +245,18 @@ export const copy = {
     /** Screen-reader labels for the save button. */
     saveLabel: (name: string) => `Save ${name} to your shortlist`,
     removeLabel: (name: string) => `Remove ${name} from your shortlist`,
-    empty: 'No saved places yet. Tap Save on a place to keep it here.',
+    /** The shortlist screen's Remove button, which replaces Saved there. */
+    remove: 'Remove',
+    /** "3 saved places": the count over the shortlist. */
+    summary: (count: number) => (count === 1 ? '1 saved place' : `${count} saved places`),
+    emptyTitle: 'Nothing saved yet',
+    emptyBody: 'When a place catches your eye, tap Save and it will wait for you here.',
     browseLink: 'Browse places',
+    /** The undo bar after a removal. It has no timer. */
+    removed: (name: string) => `Removed ${name}.`,
+    undo: 'Undo',
+    undoLabel: (name: string) => `Undo removing ${name}`,
+    restored: (name: string) => `${name} is back on your shortlist.`,
     loadFailed: "Couldn't load your shortlist. Check your connection and try again.",
     retry: 'Try again',
     saveFailed: "Couldn't update your shortlist. Try again.",

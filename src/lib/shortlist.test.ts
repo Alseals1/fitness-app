@@ -2,10 +2,12 @@ import { copy } from './copy';
 import type { KeyValueStorage } from './preferences';
 import {
   addId,
+  insertIdAt,
   isSaved,
   loadShortlist,
   parseShortlistIds,
   removeId,
+  restoreShortlistId,
   saveButtonLabel,
   saveShortlist,
   SHORTLIST_LIMIT,
@@ -58,6 +60,48 @@ describe('addId', () => {
 
   it.each(['abc', '', `${A} `])('leaves the list unchanged for the malformed id %p', (id) => {
     expect(addId([A], id)).toEqual([A]);
+  });
+});
+
+describe('insertIdAt', () => {
+  const D = placeId(4);
+
+  it('puts the id back in the middle', () => {
+    expect(insertIdAt([A, C], B, 1)).toEqual([A, B, C]);
+  });
+
+  it('puts the id back at the start', () => {
+    expect(insertIdAt([B, C], A, 0)).toEqual([A, B, C]);
+  });
+
+  it('clamps an index past the end to the end', () => {
+    expect(insertIdAt([A, B], D, 9)).toEqual([A, B, D]);
+  });
+
+  it('clamps a negative index to the start', () => {
+    expect(insertIdAt([B, C], A, -3)).toEqual([A, B, C]);
+  });
+
+  it('leaves the list unchanged when the id is already saved', () => {
+    expect(insertIdAt([A, B, C], C, 0)).toEqual([A, B, C]);
+  });
+
+  it.each(['abc', '', `${A} `])('leaves the list unchanged for the malformed id %p', (id) => {
+    expect(insertIdAt([B], id, 0)).toEqual([B]);
+  });
+
+  it('drops the oldest past the limit', () => {
+    const full = Array.from({ length: SHORTLIST_LIMIT }, (_, i) => placeId(i + 10));
+    const next = insertIdAt(full, A, 1);
+    expect(next).toHaveLength(SHORTLIST_LIMIT);
+    expect(next[1]).toBe(A);
+    expect(next).not.toContain(full[full.length - 1]);
+  });
+
+  it('does not change the list it was given', () => {
+    const ids = [A, C];
+    insertIdAt(ids, B, 1);
+    expect(ids).toEqual([A, C]);
   });
 });
 
@@ -214,6 +258,45 @@ describe('updateShortlist', () => {
       },
     };
     await expect(updateShortlist(storage, A, true)).rejects.toThrow('disk full');
+  });
+});
+
+describe('restoreShortlistId', () => {
+  it('puts the id back into the list as stored, not into a copy a screen holds', async () => {
+    // The screen removed B from [A, B, C]; meanwhile another screen saved D.
+    const D = placeId(4);
+    const { storage, items } = memoryStorage({
+      [SHORTLIST_STORAGE_KEY]: JSON.stringify({ version: 1, ids: [D, A, C] }),
+    });
+    await expect(restoreShortlistId(storage, B, 1)).resolves.toEqual([D, B, A, C]);
+    expect(items.get(SHORTLIST_STORAGE_KEY)).toBe(JSON.stringify({ version: 1, ids: [D, B, A, C] }));
+  });
+
+  it('changes nothing when the id is saved again by then', async () => {
+    const { storage } = memoryStorage({ [SHORTLIST_STORAGE_KEY]: JSON.stringify({ version: 1, ids: [B, A] }) });
+    await expect(restoreShortlistId(storage, B, 1)).resolves.toEqual([B, A]);
+  });
+
+  it('rethrows a read error and writes nothing', async () => {
+    const setItem = jest.fn(async () => {});
+    const storage: KeyValueStorage = {
+      getItem: async () => {
+        throw new Error('read failed');
+      },
+      setItem,
+    };
+    await expect(restoreShortlistId(storage, A, 0)).rejects.toThrow('read failed');
+    expect(setItem).not.toHaveBeenCalled();
+  });
+
+  it('rethrows a write error', async () => {
+    const storage: KeyValueStorage = {
+      getItem: async () => null,
+      setItem: async () => {
+        throw new Error('disk full');
+      },
+    };
+    await expect(restoreShortlistId(storage, A, 0)).rejects.toThrow('disk full');
   });
 });
 
