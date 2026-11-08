@@ -56,6 +56,47 @@ export type Database = {
           },
         ]
       }
+      place_reports: {
+        Row: {
+          created_at: string
+          device_id: string
+          id: string
+          note: string | null
+          place_id: string
+          reason: Database["public"]["Enums"]["report_reason"]
+          resolution: Database["public"]["Enums"]["report_resolution"] | null
+          resolved_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_id: string
+          id?: string
+          note?: string | null
+          place_id: string
+          reason: Database["public"]["Enums"]["report_reason"]
+          resolution?: Database["public"]["Enums"]["report_resolution"] | null
+          resolved_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_id?: string
+          id?: string
+          note?: string | null
+          place_id?: string
+          reason?: Database["public"]["Enums"]["report_reason"]
+          resolution?: Database["public"]["Enums"]["report_resolution"] | null
+          resolved_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "place_reports_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       place_submissions: {
         Row: {
           certification_name: string | null
@@ -208,6 +249,19 @@ export type Database = {
         }
         Returns: string
       }
+      admin_list_reports: {
+        Args: never
+        Returns: {
+          created_at: string
+          id: string
+          note: string
+          place_category: Database["public"]["Enums"]["place_category"]
+          place_id: string
+          place_name: string
+          place_status: Database["public"]["Enums"]["place_status"]
+          reason: Database["public"]["Enums"]["report_reason"]
+        }[]
+      }
       admin_list_submissions: {
         Args: never
         Returns: {
@@ -233,6 +287,10 @@ export type Database = {
       }
       admin_reject_place: {
         Args: { p_place_id: string; p_reason: string }
+        Returns: undefined
+      }
+      admin_resolve_reports: {
+        Args: { p_hide_place?: boolean; p_place_id: string }
         Returns: undefined
       }
       admin_set_place_certified: {
@@ -282,6 +340,15 @@ export type Database = {
         }
         Returns: string
       }
+      submit_place_report: {
+        Args: {
+          p_device_id: string
+          p_note?: string
+          p_place_id: string
+          p_reason: Database["public"]["Enums"]["report_reason"]
+        }
+        Returns: string
+      }
     }
     Enums: {
       claim_status: "pending" | "approved" | "rejected"
@@ -312,6 +379,8 @@ export type Database = {
         | "evenings"
         | "weekends"
       price_range: "free" | "budget" | "moderate" | "premium"
+      report_reason: "closed" | "wrong_details" | "spam" | "other"
+      report_resolution: "dismissed" | "hidden"
       submission_kind: "new_place" | "claim"
     }
     CompositeTypes: {
@@ -470,6 +539,8 @@ export const Constants = {
         "weekends",
       ],
       price_range: ["free", "budget", "moderate", "premium"],
+      report_reason: ["closed", "wrong_details", "spam", "other"],
+      report_resolution: ["dismissed", "hidden"],
       submission_kind: ["new_place", "claim"],
     },
   },
