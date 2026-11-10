@@ -146,3 +146,65 @@ The biggest risk is the two-sided marketplace: users won't come without good lis
 - ~~Mobile app, web app, or both for v1?~~ Mobile first (see Decisions).
 - ~~Where do listings come from: hand-entered, business-submitted, or imported?~~ Hand-entered, plus the business sign-up form (see Decisions).
 - How do new movers discover the app (apartment complexes, realtors, employers, social)?
+- Which path to venture scale does the pilot support? (See "Paths to venture scale".)
+- Which side can we reach most cheaply: movers (apartments, employers) or trainers and studios?
+
+## Paths to venture scale
+
+These are directions to test, not decisions. Each is marked *recommendation*. Nothing here changes the v1 scope, the "Not building yet" table, or any product rule. Users stay free in all three.
+
+### Why v1 alone is not venture-scale
+
+- Each user needs the app for only a few weeks, so there is little repeat use.
+- Listings are added by hand, city by city.
+- Revenue comes only from businesses paying for visibility.
+
+Venture scale needs at least one of these:
+
+- A channel that brings in users repeatably.
+- High value per user.
+- Growth that does not depend on adding cities by hand.
+
+### 1. Own the "just moved" moment (recommendation)
+
+| | |
+| --- | --- |
+| What it is | Fitness is the way in. Later categories cover getting settled in general: doctors, salons, kids' activities, social groups. |
+| Who pays | Businesses in each category, as in v1. Partners may also pay to offer it to residents as a perk. |
+| How users arrive | Through partners who reach movers in volume: apartment complexes, property managers, realtors, and employer relocation programs. |
+| Builds on from v1 | Onboarding and fit matching, hand-checked listings, the approval queue, the business sign-up form. |
+| Competitors and risks | Companies such as Updater already work with movers. Each new category needs its own listings and its own trust checks. |
+| Pilot signal | A partner (for example, an apartment complex) shares the app with new residents, and those movers use it. Movers also ask for help beyond fitness. |
+
+### 2. Client acquisition for independent trainers and studios (recommendation)
+
+| | |
+| --- | --- |
+| What it is | Shift the focus to the paying side: leads, intake, and tracking whether a lead converted. Tracking also solves the attribution problem in "Other risks". Over time it becomes monthly software that works nationally, without launching city by city. |
+| Who pays | Independent trainers and studios, monthly. |
+| How users arrive | Businesses come first. Their own links and leads bring in clients, plus any movers the app reaches. |
+| Builds on from v1 | The business sign-up form and claim flow, admin verification, contact and visit click tracking. Lead tracking connects to the "Pay-per-lead" row in "Free vs. paid", which stays "Possible later". |
+| Competitors and risks | Thumbtack, Mindbody, Trainerize. Not yet researched. A trainer client is worth a lot per year, so value per user is high, but only if trainers pay for the software and keep paying. |
+| Pilot signal | Businesses get leads they can trace back to the app, some pay after the free trial, and trainers say a new client is worth enough to pay monthly. |
+
+### 3. Employer relocation (recommendation)
+
+| | |
+| --- | --- |
+| What it is | Companies that relocate or hire staff pay per employee to help them settle in. |
+| Who pays | Employers, per employee. |
+| How users arrive | Through the employer's relocation program. One sale brings many users. |
+| Builds on from v1 | Onboarding and fit matching, hand-checked listings. |
+| Competitors and risks | ClassPass and Wellhub focus on access rather than fit. Employer sales are likely slower than selling to one studio. Not known how many Birmingham employers relocate staff. |
+| Pilot signal | Movers who arrive through an employer use the app, or an employer in Birmingham says it would pay per relocated employee. |
+
+### What the Birmingham pilot must prove first
+
+| What we need to see | Why it matters |
+| --- | --- |
+| Movers visit a place within 2 weeks | This is the v1 success measure. Every path depends on it. |
+| Businesses get leads they can trace back to the app, and some pay | Needed for path 2. Also shows whether the businesses in paths 1 and 3 get value. |
+| At least one channel brings in movers cheaply and repeatably | Needed for paths 1 and 3. Answers the user-acquisition risk. |
+| A new city could launch without the owner entering listings by hand | Needed for growth that does not depend on adding cities by hand. |
+
+The last point would eventually conflict with the rule that listings are entered by hand and nothing is imported. Changing that rule is a future PRD decision. It is not part of this change.
