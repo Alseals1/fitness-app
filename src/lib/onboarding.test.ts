@@ -1,7 +1,9 @@
 import { copy } from './copy';
 import {
+  ONBOARDING_EXIT_HREF,
   ONBOARDING_STEPS,
   afterSave,
+  exitOnboarding,
   hasAnswer,
   isLastStep,
   primaryActionLabel,
@@ -140,6 +142,19 @@ describe('afterSave', () => {
   it('celebrates finishing, and leaves at once after Skip the rest', () => {
     expect(afterSave('done')).toBe('celebrate');
     expect(afterSave('skipRest')).toBe('leave');
+  });
+});
+
+describe('exitOnboarding', () => {
+  it('sends the person to the matched results', () => {
+    expect(ONBOARDING_EXIT_HREF).toBe('/results');
+  });
+
+  it('dismisses to the results once, and does nothing else', () => {
+    const nav = { dismissTo: jest.fn() };
+    exitOnboarding(nav);
+    expect(nav.dismissTo).toHaveBeenCalledTimes(1);
+    expect(nav.dismissTo).toHaveBeenCalledWith('/results');
   });
 });
 

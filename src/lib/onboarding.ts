@@ -100,10 +100,22 @@ export type SaveTrigger = 'done' | 'skipRest';
 
 /**
  * What happens after a successful save. Finishing every question earns the short "You're all set"
- * moment; "Skip the rest" is the fast exit, so it leaves at once.
+ * moment; "Skip the rest" is the fast exit, so it goes to the results at once.
  */
 export function afterSave(trigger: SaveTrigger): 'celebrate' | 'leave' {
   return trigger === 'done' ? 'celebrate' : 'leave';
+}
+
+/** Where onboarding goes once the answers are saved: the matched results. */
+export const ONBOARDING_EXIT_HREF = '/results' as const;
+
+/**
+ * Leaves onboarding after a save. Pops back to /results when it is already below in the stack
+ * (onboarding opened from results), otherwise replaces onboarding with it (opened from home, or a
+ * deep link), so back from results always reaches home and never the finished quiz.
+ */
+export function exitOnboarding(nav: { dismissTo: (href: typeof ONBOARDING_EXIT_HREF) => void }): void {
+  nav.dismissTo(ONBOARDING_EXIT_HREF);
 }
 
 /** What home does about the first-run quiz: open it, mark the launch as prompted without opening it, or nothing yet. */
