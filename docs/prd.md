@@ -173,7 +173,7 @@ Venture scale needs at least one of these:
 | Who pays | Businesses in each category, as in v1. Partners may also pay to offer it to residents as a perk. |
 | How users arrive | Through partners who reach movers in volume: apartment complexes, property managers, realtors, and employer relocation programs. |
 | Builds on from v1 | Onboarding and fit matching, hand-checked listings, the approval queue, the business sign-up form. |
-| Competitors and risks | Companies such as Updater already work with movers. Each new category needs its own listings and its own trust checks. |
+| Competitors and risks | Companies such as Updater already work with movers. Not yet researched. Each new category needs its own listings and its own trust checks. |
 | Pilot signal | A partner (for example, an apartment complex) shares the app with new residents, and those movers use it. Movers also ask for help beyond fitness. |
 
 ### 2. Client acquisition for independent trainers and studios (recommendation)
@@ -183,7 +183,7 @@ Venture scale needs at least one of these:
 | What it is | Shift the focus to the paying side: leads, intake, and tracking whether a lead converted. Tracking also solves the attribution problem in "Other risks". Over time it becomes monthly software that works nationally, without launching city by city. |
 | Who pays | Independent trainers and studios, monthly. |
 | How users arrive | Businesses come first. Their own links and leads bring in clients, plus any movers the app reaches. |
-| Builds on from v1 | The business sign-up form and claim flow, admin verification, contact and visit click tracking. Lead tracking connects to the "Pay-per-lead" row in "Free vs. paid", which stays "Possible later". |
+| Builds on from v1 | The business sign-up form and claim flow, admin verification. Contact and visit click tracking is a proposed v1 metric (see "Proposed v1 metrics") and is not built yet. Lead tracking connects to the "Pay-per-lead" row in "Free vs. paid", which stays "Possible later". |
 | Competitors and risks | Thumbtack, Mindbody, Trainerize. Not yet researched. A trainer client is worth a lot per year, so value per user is high, but only if trainers pay for the software and keep paying. |
 | Pilot signal | Businesses get leads they can trace back to the app, some pay after the free trial, and trainers say a new client is worth enough to pay monthly. |
 
@@ -195,7 +195,7 @@ Venture scale needs at least one of these:
 | Who pays | Employers, per employee. |
 | How users arrive | Through the employer's relocation program. One sale brings many users. |
 | Builds on from v1 | Onboarding and fit matching, hand-checked listings. |
-| Competitors and risks | ClassPass and Wellhub focus on access rather than fit. Employer sales are likely slower than selling to one studio. Not known how many Birmingham employers relocate staff. |
+| Competitors and risks | ClassPass and Wellhub focus on access rather than fit. Not yet researched. Employer sales are likely slower than selling to one studio. Not known how many Birmingham employers relocate staff. |
 | Pilot signal | Movers who arrive through an employer use the app, or an employer in Birmingham says it would pay per relocated employee. |
 
 ### What the Birmingham pilot must prove first
